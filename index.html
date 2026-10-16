@@ -1,0 +1,941 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Книга">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#E3E6E2">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<style>
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font:14px -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
+img{max-width:100%}[hidden]{display:none!important}
+</style>
+<title>Рабочий стол писателя</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&display=swap">
+<style>
+/* Layout: writer's desk — grey-green desk surface, a single book sheet in the centre, table of contents as a side drawer, formatting bar pinned under the thumb. Single light "paper" theme by choice. */
+:root{
+  --desk:#E3E6E2; --desk-2:#D5DAD5; --paper:#FCFCF9; --ink:#23272C; --ink-2:#5C636A; --ink-3:#8B9298;
+  --line:#D2D7D2; --accent:#2D4A78; --accent-soft:#E2E8F1; --danger:#9E3A31; --ok:#3F6B4E;
+  --font-book:'Literata',Georgia,'Times New Roman',serif;
+  --font-display:'Cormorant Garamond','Literata',Georgia,serif;
+  --font-ui:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+  --side-w:300px; --bar-h:52px;
+  color-scheme:light;
+}
+html,body{height:100%}
+body{background:var(--desk);color:var(--ink);font-family:var(--font-ui);font-size:15px;-webkit-tap-highlight-color:transparent;overscroll-behavior-y:none}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:40;background:var(--desk)}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,[contenteditable]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+svg{display:block}
+.ico{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+
+/* ---------- header ---------- */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;background:var(--desk);border-bottom:1px solid var(--desk-2);
+  padding-left:max(10px,env(safe-area-inset-left,0px));padding-right:max(10px,env(safe-area-inset-right,0px))}
+.top-in{display:flex;align-items:center;gap:4px;height:52px}
+.ibtn{width:42px;height:42px;display:grid;place-items:center;border-radius:12px;color:var(--ink);flex:none}
+.ibtn:active{background:var(--desk-2)}
+.top-title{flex:1;min-width:0;text-align:center;line-height:1.15}
+.top-title small{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.top-title b{display:block;font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.save-dot{font-size:11px;color:var(--ink-3);min-width:0}
+
+/* ---------- sidebar ---------- */
+.side{position:fixed;z-index:50;top:0;bottom:0;left:0;width:min(86vw,var(--side-w));background:var(--paper);border-right:1px solid var(--line);
+  display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);
+  transform:translateX(-102%);transition:transform .25s ease;box-shadow:0 0 40px rgba(20,30,40,.12)}
+.side.open{transform:none}
+.scrim{position:fixed;inset:0;z-index:45;background:rgba(25,30,36,.32);opacity:0;pointer-events:none;transition:opacity .25s}
+.scrim.on{opacity:1;pointer-events:auto}
+.side-head{padding:16px 16px 10px;border-bottom:1px solid var(--line)}
+.book-name{font-family:var(--font-display);font-size:24px;font-weight:600;line-height:1.1;text-wrap:balance}
+.book-author{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);margin-top:4px}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;padding:8px 10px;border-bottom:1px solid var(--line)}
+.tab{padding:8px 2px;border-radius:9px;font-size:13px;color:var(--ink-2);text-align:center}
+.tab[aria-selected="true"]{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.pane{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;padding:10px 10px 16px}
+.pane[hidden]{display:none}
+.side-foot{padding:10px 16px 12px;border-top:1px solid var(--line);font-size:12px;color:var(--ink-3);line-height:1.4}
+.side-foot b{color:var(--ink-2);font-weight:600;font-variant-numeric:tabular-nums}
+
+.toc-tools{display:flex;gap:6px;margin:2px 0 10px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:7px 11px;border-radius:999px;border:1px solid var(--line);font-size:13px;color:var(--ink-2);background:var(--paper)}
+.chip.on{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.chip .ico{width:16px;height:16px}
+.toc{display:flex;flex-direction:column;gap:1px}
+.toc-part{display:flex;align-items:center;gap:6px;padding:14px 8px 6px}
+.toc-part .pl{flex:1;min-width:0}
+.toc-part small{display:block;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+.toc-part span{display:block;font-family:var(--font-display);font-size:18px;font-weight:600;line-height:1.15}
+.toc-ch{display:flex;align-items:center;gap:6px;border-radius:10px}
+.toc-ch.active{background:var(--accent-soft)}
+.toc-ch .go{flex:1;min-width:0;display:grid;grid-template-columns:2.1em 1fr auto;align-items:baseline;gap:4px;padding:9px 8px;text-align:left}
+.toc-ch .n{font-family:var(--font-book);color:var(--ink-3);font-variant-numeric:tabular-nums;font-size:14px}
+.toc-ch .t{font-family:var(--font-book);font-size:15px;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.toc-ch .w{font-size:11px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.toc-ch.active .t{color:var(--accent);font-weight:600}
+.row-ctl{display:flex;gap:0;flex:none}
+.row-ctl button{width:32px;height:34px;display:grid;place-items:center;color:var(--ink-2);border-radius:8px}
+.row-ctl button:active{background:var(--desk)}
+.row-ctl .ico{width:18px;height:18px}
+.row-ctl .del{color:var(--danger)}
+.note{font-size:12.5px;line-height:1.45;color:var(--ink-2);background:var(--desk);border-radius:10px;padding:10px 12px;margin:12px 2px 0}
+
+.search-box{position:relative;margin-bottom:8px}
+.search-box input{width:100%;box-sizing:border-box;padding:11px 12px 11px 38px;border-radius:12px;border:1px solid var(--line);background:var(--paper);font:inherit;font-size:16px;color:var(--ink)}
+.search-box .ico{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--ink-3)}
+.hits{display:flex;flex-direction:column;gap:2px}
+.hit{text-align:left;padding:10px 10px;border-radius:10px;display:block;width:100%}
+.hit:active{background:var(--desk)}
+.hit small{display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin-bottom:3px}
+.hit span{font-family:var(--font-book);font-size:14px;line-height:1.45;color:var(--ink-2)}
+.hit mark{background:#F3E2A6;color:var(--ink);border-radius:2px;padding:0 1px}
+.muted{color:var(--ink-3);font-size:13px;padding:8px 4px;line-height:1.45}
+
+.cards{display:flex;flex-direction:column;gap:8px}
+.card{display:flex;gap:12px;align-items:center;text-align:left;width:100%;padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--paper)}
+.card:active{background:var(--desk)}
+.ava{width:48px;height:48px;border-radius:50%;flex:none;background:var(--accent-soft) center/cover no-repeat;display:grid;place-items:center;font-family:var(--font-display);font-size:20px;font-weight:600;color:var(--accent)}
+.card-b{min-width:0;flex:1}
+.card-b b{display:block;font-family:var(--font-book);font-size:15px;font-weight:600;line-height:1.25}
+.card-b small{display:block;font-size:12.5px;color:var(--ink-2);margin-top:2px;line-height:1.35;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.ev-ch{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);display:block;margin-bottom:2px}
+.minis{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.mini{font-size:11.5px;padding:2px 8px;border-radius:999px;background:var(--desk);color:var(--ink-2)}
+.add-btn{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:11px;border-radius:12px;border:1px dashed var(--ink-3);color:var(--ink-2);margin-top:4px;font-size:14px}
+.add-btn .ico{width:18px;height:18px}
+
+/* ---------- editor ---------- */
+main{padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px));padding-block:18px calc(var(--bar-h) + 40px + env(safe-area-inset-bottom,0px))}
+.sheet{max-width:600px;margin:0 auto;background:var(--paper);box-shadow:0 1px 2px rgba(30,40,50,.08),0 8px 30px rgba(30,40,50,.07);border-radius:3px;
+  padding:13% 10.5% 16%;min-height:70vh;box-sizing:border-box;position:relative}
+.sheet .part-line{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);text-align:center;margin-bottom:6px;font-family:var(--font-ui)}
+.sheet .ch-label{font-family:var(--font-ui);font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);text-align:center}
+.ch-title{font-family:var(--font-display);font-weight:600;font-size:clamp(28px,7.5vw,38px);line-height:1.08;text-align:center;margin:10px 0 0;text-wrap:balance;outline:none;min-height:1.1em}
+.ch-title:empty::before{content:"Название главы";color:var(--ink-3)}
+.orn{display:flex;justify-content:center;margin:18px 0 26px;color:var(--ink-3)}
+.prose{font-family:var(--font-book);font-size:clamp(16px,4.3vw,18px);line-height:1.6;outline:none;text-align:justify;hyphens:auto;-webkit-hyphens:auto;min-height:40vh;caret-color:var(--accent);overflow-wrap:break-word}
+.prose p{margin:0;text-indent:1.5em}
+.prose > p:first-child,.prose h2 + p,.prose .scene + p,.prose figure + p{text-indent:0}
+.prose h2{font-family:var(--font-book);font-size:.95em;font-weight:600;text-align:center;letter-spacing:.06em;margin:1.4em 0 .7em;text-indent:0}
+.prose .scene{text-align:center;letter-spacing:.5em;margin:.9em 0;color:var(--ink-2);user-select:none;-webkit-user-select:none}
+.prose figure{margin:1em 0;text-align:center}
+.prose figure img{max-width:100%;max-height:60vh;border-radius:2px;display:block;margin:0 auto}
+.prose figcaption{font-style:italic;font-size:.82em;color:var(--ink-2);margin-top:.4em;outline:none;text-align:center}
+.prose figcaption:empty::before{content:"Подпись к картинке";color:var(--ink-3)}
+.prose b,.prose strong{font-weight:600}
+::highlight(hit){background:#F3D77A;color:var(--ink)}
+.empty{max-width:420px;margin:12vh auto;text-align:center;color:var(--ink-2);font-family:var(--font-book);font-size:17px;line-height:1.5}
+.empty .btn{margin-top:16px}
+
+/* ---------- toolbar ---------- */
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:35;background:rgba(252,252,249,.96);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-top:1px solid var(--line);
+  padding-bottom:env(safe-area-inset-bottom,0px);padding-left:max(8px,env(safe-area-inset-left,0px));padding-right:max(8px,env(safe-area-inset-right,0px))}
+.bar.kb{padding-bottom:0}
+.bar-in{display:flex;justify-content:center;gap:2px;height:var(--bar-h);align-items:center;max-width:600px;margin:0 auto;overflow-x:auto}
+.tb{min-width:44px;height:40px;padding:0 8px;border-radius:10px;display:grid;place-items:center;font-size:15px;color:var(--ink);flex:none}
+.tb:active,.tb.on{background:var(--accent-soft);color:var(--accent)}
+.tb.serif{font-family:var(--font-book)}
+.tb .ico{width:20px;height:20px}
+.tb-sep{width:1px;height:22px;background:var(--line);margin:0 4px;flex:none}
+
+/* ---------- modal ---------- */
+.modal{position:fixed;inset:0;z-index:80;display:flex;align-items:flex-end;justify-content:center;background:rgba(25,30,36,.36)}
+.modal[hidden]{display:none!important}
+.dlg{background:var(--paper);width:100%;max-width:520px;max-height:92%;display:flex;flex-direction:column;border-radius:18px 18px 0 0;box-shadow:0 -10px 40px rgba(0,0,0,.15);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (min-width:700px){.modal{align-items:center}.dlg{border-radius:18px;padding-bottom:0}}
+.dlg-h{display:flex;align-items:center;gap:8px;padding:14px 12px 10px 18px;border-bottom:1px solid var(--line)}
+.dlg-h h3{flex:1;margin:0;font-family:var(--font-display);font-size:23px;font-weight:600}
+.dlg-b{overflow:auto;padding:16px 18px;display:flex;flex-direction:column;gap:14px;-webkit-overflow-scrolling:touch}
+.dlg-f{display:flex;gap:8px;padding:12px 18px 14px;border-top:1px solid var(--line);flex-wrap:wrap}
+.dlg-f .sp{flex:1}
+.fld{display:flex;flex-direction:column;gap:6px}
+.fld > span{font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.fld input,.fld textarea,.fld select{font:inherit;font-size:16px;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--ink);width:100%;box-sizing:border-box}
+.fld textarea{min-height:84px;resize:vertical;font-family:var(--font-book);line-height:1.5}
+.row2{display:grid;grid-template-columns:1fr 110px;gap:10px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:11px 16px;border-radius:12px;background:var(--accent);color:#fff;font-weight:600;font-size:15px}
+.btn.ghost{background:var(--desk);color:var(--ink)}
+.btn.danger{background:transparent;color:var(--danger);padding-inline:6px}
+.btn .ico{width:18px;height:18px}
+.photo-pick{display:flex;align-items:center;gap:14px}
+.photo-pick .ava{width:84px;height:84px;font-size:32px}
+.photo-pick .acts{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.link{color:var(--accent);font-size:14px;font-weight:600}
+.link.red{color:var(--danger)}
+.checks{display:flex;flex-wrap:wrap;gap:6px}
+.checks label{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;border:1px solid var(--line);font-size:14px}
+.checks input{width:16px;height:16px;accent-color:var(--accent)}
+.checks label:has(input:checked){border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+.cover-row{display:flex;gap:12px}
+.cover-slot{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.cover-thumb{width:100%;aspect-ratio:125/200;max-width:100%;border-radius:4px;border:1px solid var(--line);background:var(--desk) center/cover no-repeat;display:grid;place-items:center;color:var(--ink-3);font-size:12px;text-align:center;padding:6px;box-sizing:border-box}
+.fine{font-size:12.5px;color:var(--ink-2);line-height:1.5}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--bar-h) + 20px + env(safe-area-inset-bottom,0px));z-index:95;background:var(--ink);color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;max-width:calc(100% - 40px);box-shadow:0 6px 20px rgba(0,0,0,.2)}
+
+/* ---------- preview ---------- */
+.prev{position:fixed;inset:0;z-index:70;background:#CBD0CB;display:flex;flex-direction:column}
+.prev[hidden]{display:none!important}
+.prev-h{display:flex;align-items:center;gap:8px;padding:calc(env(safe-area-inset-top,0px) + 6px) max(10px,env(safe-area-inset-right,0px)) 6px max(10px,env(safe-area-inset-left,0px));background:var(--desk);border-bottom:1px solid var(--desk-2)}
+.prev-h .info{flex:1;min-width:0;font-size:13px;color:var(--ink-2)}
+.prev-h .info b{display:block;font-size:15px;color:var(--ink)}
+.prev-b{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;padding:18px max(16px,env(safe-area-inset-right,0px)) calc(30px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;align-items:center;gap:16px}
+.pwrap{position:relative;flex:none;box-shadow:0 2px 10px rgba(0,0,0,.14);background:#fff;overflow:hidden}
+.pwrap .page{position:absolute;left:0;top:0;transform-origin:0 0}
+.busy{position:fixed;inset:0;z-index:100;background:rgba(227,230,226,.94);display:grid;place-items:center;text-align:center;font-size:15px;color:var(--ink-2);padding:20px}
+.busy b{display:block;font-family:var(--font-display);font-size:26px;color:var(--ink);margin-bottom:6px}
+.busy[hidden]{display:none!important}
+#measure{position:absolute;left:-12000px;top:0;visibility:hidden;pointer-events:none}
+#pdfHost{position:fixed;left:0;top:0;z-index:90;pointer-events:none}
+
+/* Book page (125 × 200 mm at 96 dpi = 472 × 756 px) */
+.page{width:472px;height:756px;background:#fff;color:#1d2024;position:relative;overflow:hidden;font-family:var(--font-book);box-sizing:border-box}
+.pbody{position:absolute;top:52px;width:382px;height:640px;font-size:13.4px;line-height:19.5px;text-align:justify;hyphens:manual;overflow:hidden}
+.page.recto .pbody{left:52px}.page.verso .pbody{left:38px}
+.pbody p{margin:0;text-indent:1.3em}
+.pbody p.first,.pbody p.cont{text-indent:0}
+.pbody p.head{text-align-last:justify}
+.pbody h2{font-size:13.4px;font-weight:600;text-align:center;letter-spacing:.06em;margin:19.5px 0 9.75px;line-height:19.5px}
+.pbody .scene{text-align:center;letter-spacing:.5em;margin:9.75px 0;line-height:19.5px}
+.pbody figure{margin:9.75px 0;text-align:center}
+.pbody figure img{max-width:100%;max-height:400px;display:block;margin:0 auto}
+.pbody figcaption{font-style:italic;font-size:11.5px;line-height:15px;margin-top:5px;text-align:center}
+.ch-open{padding-top:118px;text-align:center;margin-bottom:34px}
+.ch-open .lab{font-family:var(--font-ui);font-size:9.5px;letter-spacing:.24em;text-transform:uppercase;color:#2D4A78}
+.ch-open .tit{font-family:var(--font-display);font-size:29px;font-weight:600;line-height:1.1;margin-top:10px;text-wrap:balance}
+.ch-open .rule{width:36px;height:1px;background:#9aa0a6;margin:16px auto 0}
+.rh{position:absolute;top:24px;left:52px;right:52px;font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;text-align:center;color:#6b7177;font-family:var(--font-book);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.folio{position:absolute;bottom:26px;left:0;right:0;text-align:center;font-size:11px;color:#3d4247;font-variant-numeric:tabular-nums}
+.page.cover{background:#2D4A78 center/cover no-repeat;color:#F4F4EE}
+.cover-txt{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px}
+.cover-txt .a{font-family:var(--font-ui);font-size:11px;letter-spacing:.28em;text-transform:uppercase;opacity:.85}
+.cover-txt .t{font-family:var(--font-display);font-size:44px;font-weight:600;line-height:1.02;margin-top:18px;text-wrap:balance}
+.cover-txt .r{width:44px;height:1px;background:currentColor;opacity:.6;margin:22px auto 0}
+.back-txt{position:absolute;left:54px;right:54px;top:50%;transform:translateY(-50%);font-family:var(--font-book);font-size:13px;line-height:20px;text-align:center;white-space:pre-wrap}
+.tp{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;text-align:center;padding:150px 50px 0}
+.tp .a{font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:#4d535a;font-family:var(--font-ui)}
+.tp .t{font-family:var(--font-display);font-size:36px;font-weight:600;line-height:1.05;margin-top:22px;text-wrap:balance}
+.part-pg{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:50px}
+.part-pg .l{font-family:var(--font-ui);font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:#2D4A78}
+.part-pg .t{font-family:var(--font-display);font-size:32px;font-weight:600;margin-top:12px;line-height:1.1;text-wrap:balance}
+.toc-h{font-family:var(--font-display);font-size:24px;font-weight:600;text-align:center;margin:40px 0 28px}
+.toc-r{display:flex;align-items:baseline;gap:6px;line-height:19.5px;margin-bottom:4px;text-align:left}
+.toc-r .tt{flex:0 1 auto}
+.toc-r .dd{flex:1;border-bottom:1px dotted #8b9298;transform:translateY(-4px);min-width:12px}
+.toc-r .nn{font-variant-numeric:tabular-nums;flex:none}
+.toc-r.pt{margin-top:12px;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#2D4A78;font-family:var(--font-ui)}
+.toc-r.ch{padding-left:14px}
+
+@media (min-width:960px){
+  .side{transform:none;box-shadow:none}
+  .scrim{display:none}
+  .top,main{margin-left:var(--side-w)}
+  .bar{left:var(--side-w)}
+  #menuBtn{display:none}
+}
+@media (prefers-reduced-motion:reduce){.side,.scrim{transition:none}}
+</style>
+
+</head>
+<body>
+<header class="top">
+  <div class="top-in">
+    <button class="ibtn" id="menuBtn" aria-label="Оглавление"><svg class="ico" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/></svg></button>
+    <div class="top-title"><small id="topSmall">Книга</small><b id="topTitle">—</b></div>
+    <button class="ibtn" id="searchBtn" aria-label="Поиск"><svg class="ico" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/></svg></button>
+    <button class="ibtn" id="prevBtn" aria-label="Вёрстка и PDF"><svg class="ico" viewBox="0 0 24 24"><path d="M12 6.5C10 5 7 4.5 3.5 5v13c3.5-.5 6.5 0 8.5 1.5 2-1.5 5-2 8.5-1.5V5c-3.5-.5-6.5 0-8.5 1.5Z"/><path d="M12 6.5v13"/></svg></button>
+    <button class="ibtn" id="bookBtn" aria-label="Книга и обложки"><svg class="ico" viewBox="0 0 24 24"><circle cx="5.5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="18.5" cy="12" r="1.2"/></svg></button>
+  </div>
+</header>
+
+<div class="scrim" id="scrim"></div>
+<aside class="side" id="side" aria-label="Боковая панель">
+  <div class="side-head"><div class="book-name" id="sideTitle"></div><div class="book-author" id="sideAuthor"></div></div>
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" data-tab="toc" aria-selected="true">Главы</button>
+    <button class="tab" role="tab" data-tab="find" aria-selected="false">Поиск</button>
+    <button class="tab" role="tab" data-tab="chars" aria-selected="false">Герои</button>
+    <button class="tab" role="tab" data-tab="events" aria-selected="false">События</button>
+  </div>
+  <div class="pane" id="pane-toc">
+    <div class="toc-tools">
+      <button class="chip" id="addCh"><svg class="ico" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Глава</button>
+      <button class="chip" id="addPart"><svg class="ico" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Часть</button>
+      <button class="chip" id="editToc"><svg class="ico" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16v4Z"/></svg>Порядок</button>
+    </div>
+    <div class="toc" id="toc"></div>
+    <div id="sampleNote"></div>
+  </div>
+  <div class="pane" id="pane-find" hidden>
+    <div class="search-box"><svg class="ico" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/></svg><input id="q" type="search" placeholder="Пара слов из текста" autocomplete="off" enterkeyhint="search"></div>
+    <div class="hits" id="hits"><div class="muted">Введите хотя бы две буквы. Ищу во всех главах, в заголовках и подписях к картинкам. Буквы «е» и «ё» считаются одинаковыми.</div></div>
+  </div>
+  <div class="pane" id="pane-chars" hidden><div class="cards" id="chars"></div></div>
+  <div class="pane" id="pane-events" hidden><div class="cards" id="events"></div></div>
+  <div class="side-foot"><b id="totWords">0</b> слов · <b id="totPages">≈0</b> стр.<br>Текст хранится только на этом устройстве.</div>
+</aside>
+
+<main id="main">
+  <article class="sheet" id="sheet">
+    <div class="part-line" id="partLine"></div>
+    <div class="ch-label" id="chLabel">Глава 1</div>
+    <h1 class="ch-title" id="chTitle" spellcheck="true"></h1>
+    <div class="orn" aria-hidden="true"><svg width="54" height="10" viewBox="0 0 54 10"><path d="M0 5h20M34 5h20" stroke="currentColor" stroke-width="1"/><path d="M27 1.5 30.5 5 27 8.5 23.5 5Z" fill="currentColor"/></svg></div>
+    <div class="prose" id="prose" contenteditable="true" lang="ru" spellcheck="true"></div>
+  </article>
+  <div class="empty" id="empty" hidden>В книге пока нет глав.<br><button class="btn" id="emptyAdd">Начать первую главу</button></div>
+</main>
+
+<nav class="bar" id="bar" aria-label="Оформление текста">
+  <div class="bar-in">
+    <button class="tb serif" data-cmd="p" title="Обычный абзац">¶</button>
+    <button class="tb serif" data-cmd="h2" title="Подзаголовок" style="font-weight:600">Заг</button>
+    <button class="tb serif" data-cmd="scene" title="Разрыв сцены">✳✳✳</button>
+    <span class="tb-sep"></span>
+    <button class="tb serif" data-cmd="bold" title="Жирный" style="font-weight:700">Ж</button>
+    <button class="tb serif" data-cmd="italic" title="Курсив" style="font-style:italic">К</button>
+    <span class="tb-sep"></span>
+    <button class="tb" data-cmd="img" title="Вставить картинку"><svg class="ico" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="14" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="m4 17 5-4.5 4 3.5 3-2.5 4 3.5"/></svg></button>
+    <button class="tb" data-cmd="done" title="Скрыть клавиатуру"><svg class="ico" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></button>
+  </div>
+</nav>
+
+<div class="modal" id="modal" hidden><div class="dlg" role="dialog" aria-modal="true">
+  <div class="dlg-h"><h3 id="mTitle"></h3><button class="ibtn" id="mClose" aria-label="Закрыть"><svg class="ico" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+  <div class="dlg-b" id="mBody"></div>
+  <div class="dlg-f" id="mFoot"></div>
+</div></div>
+
+<section class="prev" id="prev" hidden>
+  <div class="prev-h">
+    <button class="ibtn" id="prevClose" aria-label="Назад к тексту"><svg class="ico" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <div class="info"><b>Вёрстка книги</b><span id="prevInfo">125 × 200 мм</span></div>
+    <button class="btn" id="pdfBtn"><svg class="ico" viewBox="0 0 24 24"><path d="M12 4v11m0 0-4-4m4 4 4-4M5 19h14"/></svg>PDF</button>
+  </div>
+  <div class="prev-b" id="prevBody"></div>
+</section>
+
+<div class="busy" id="busy" hidden><div><b id="busyT">Верстаю книгу</b><span id="busyS"></span></div></div>
+<div id="measure"></div>
+<div id="pdfHost"></div>
+<input type="file" id="fileImg" accept="image/*" hidden>
+<input type="file" id="fileJson" accept=".json,application/json" hidden>
+
+<script>
+(function(){
+'use strict';
+document.documentElement.lang='ru';
+const $=(s,r=document)=>r.querySelector(s);
+const uid=()=>Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-4);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function el(tag,attrs,...kids){const e=document.createElement(tag);if(attrs)for(const k in attrs){const v=attrs[k];if(v==null||v===false)continue;if(k==='class')e.className=v;else if(k==='html')e.innerHTML=v;else if(k==='text')e.textContent=v;else if(k.startsWith('on'))e.addEventListener(k.slice(2),v);else e.setAttribute(k,v===true?'':v);}for(const c of kids.flat()){if(c==null||c===false)continue;e.append(c.nodeType?c:document.createTextNode(c));}return e;}
+const ICON={
+ up:'<svg class="ico" viewBox="0 0 24 24"><path d="m6 14 6-6 6 6"/></svg>',
+ down:'<svg class="ico" viewBox="0 0 24 24"><path d="m6 10 6 6 6-6"/></svg>',
+ edit:'<svg class="ico" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16v4Z"/></svg>',
+ del:'<svg class="ico" viewBox="0 0 24 24"><path d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12"/></svg>',
+ plus:'<svg class="ico" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>'
+};
+const ORD=['первая','вторая','третья','четвёртая','пятая','шестая','седьмая','восьмая','девятая','десятая','одиннадцатая','двенадцатая'];
+
+/* ---------- storage: IndexedDB on this device ---------- */
+const Store={db:null,mode:'idb',mem:{},
+ async open(){
+  try{this.db=await new Promise((res,rej)=>{const r=indexedDB.open('kniga-pisatelya',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);setTimeout(()=>rej('timeout'),4000);});}
+  catch(e){try{localStorage.setItem('kp:t','1');localStorage.removeItem('kp:t');this.mode='ls';}catch(_){this.mode='mem';}}
+  try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist();}catch(e){}
+ },
+ tx(m){return this.db.transaction('kv',m).objectStore('kv');},
+ async get(k){
+  if(this.mode==='idb')return new Promise(res=>{try{const r=this.tx('readonly').get(k);r.onsuccess=()=>res(r.result);r.onerror=()=>res(undefined);}catch(e){res(undefined)}});
+  if(this.mode==='ls'){try{const v=localStorage.getItem('kp:'+k);return v?JSON.parse(v):undefined}catch(e){return undefined}}
+  return this.mem[k];
+ },
+ async set(k,v){
+  if(this.mode==='idb')return new Promise(res=>{try{const r=this.tx('readwrite').put(v,k);r.onsuccess=()=>res(true);r.onerror=()=>res(false);}catch(e){res(false)}});
+  if(this.mode==='ls'){try{localStorage.setItem('kp:'+k,JSON.stringify(v));return true}catch(e){return false}}
+  this.mem[k]=v;return true;
+ },
+ async del(k){
+  if(this.mode==='idb')return new Promise(res=>{try{const r=this.tx('readwrite').delete(k);r.onsuccess=r.onerror=()=>res();}catch(e){res()}});
+  if(this.mode==='ls'){try{localStorage.removeItem('kp:'+k)}catch(e){}return}
+  delete this.mem[k];
+ },
+ async clear(){
+  if(this.mode==='idb')return new Promise(res=>{try{const r=this.tx('readwrite').clear();r.onsuccess=r.onerror=()=>res();}catch(e){res()}});
+  if(this.mode==='ls'){try{Object.keys(localStorage).filter(k=>k.startsWith('kp:')).forEach(k=>localStorage.removeItem(k))}catch(e){}return}
+  this.mem={};
+ }
+};
+
+/* ---------- state ---------- */
+let book=null;           // meta without chapter text
+const html={};           // chapter id -> html
+const wc={};             // chapter id -> words
+let cur=null, editToc=false, tab='toc';
+const timers={};
+function later(key,fn,ms){clearTimeout(timers[key]);timers[key]=setTimeout(()=>{delete timers[key];fn();},ms);}
+function flushAll(){for(const k in timers){clearTimeout(timers[k]);delete timers[k];}saveMetaNow();if(cur)saveChNow(cur);}
+async function saveMetaNow(){const ok=await Store.set('meta',book);status(ok?'Сохранено':'Не удалось сохранить');}
+function saveMeta(){status('…');later('meta',saveMetaNow,500);}
+async function saveChNow(id){if(html[id]==null)return;const ok=await Store.set('ch:'+id,html[id]);status(ok?'Сохранено':'Не удалось сохранить');}
+function saveCh(id){status('…');later('ch:'+id,()=>saveChNow(id),600);}
+function status(t){/* quiet indicator in the header small line */ const s=$('#topSmall');if(!s)return;s.dataset.st=t;}
+
+const chapters=()=>book.items.filter(i=>i.t==='ch');
+const item=id=>book.items.find(i=>i.id===id);
+function chNum(id){let n=0;for(const i of book.items){if(i.t==='ch')n++;if(i.id===id)return n;}return 0;}
+function partOf(id){let p=null;for(const i of book.items){if(i.t==='part')p=i;if(i.id===id)return p;}return null;}
+function partNo(id){let n=0;for(const i of book.items){if(i.t==='part')n++;if(i.id===id)return n;}return 0;}
+const partLabel=n=>'Часть '+(ORD[n-1]||n);
+
+/* ---------- text helpers ---------- */
+const BLOCKS=new Set(['P','H1','H2','H3','DIV','FIGURE','FIGCAPTION','LI','BLOCKQUOTE']);
+function textMap(root){let text='';const map=[];
+ (function walk(n){for(const c of n.childNodes){
+  if(c.nodeType===3){map.push([c,text.length]);text+=c.nodeValue;}
+  else if(c.nodeType===1){if(c.tagName==='BR'){text+='\n';continue;}if(c.tagName==='IMG')continue;
+   const b=BLOCKS.has(c.tagName);if(b&&text&&!text.endsWith('\n'))text+='\n';walk(c);if(b&&!text.endsWith('\n'))text+='\n';}
+ }})(root);return{text,map};}
+const norm=s=>s.toLowerCase().replace(/ё/g,'е');
+function parse(h){const d=document.createElement('div');d.innerHTML=h||'';return d;}
+function countWords(h){const t=textMap(parse(h)).text;const m=t.match(/[\p{L}\p{N}][\p{L}\p{N}'’-]*/gu);return m?m.length:0;}
+function plural(n,a,b,c){n=Math.abs(n)%100;const n1=n%10;if(n>10&&n<20)return c;if(n1>1&&n1<5)return b;if(n1===1)return a;return c;}
+
+/* ---------- sample book (example content, replaceable) ---------- */
+function sampleBook(){
+ const p1=uid(),c1=uid(),c2=uid(),vera=uid(),petr=uid();
+ const meta={v:1,sample:true,title:'Маяк на мысе Сухом',author:'Имя автора',front:null,back:null,
+  backText:'Пример аннотации для задней обложки. Замените этот текст своим описанием книги.',
+  items:[{t:'part',id:p1,title:'Берег'},{t:'ch',id:c1,title:'Смотритель'},{t:'ch',id:c2,title:'Письмо'}],
+  characters:[
+   {id:vera,name:'Вера Лапина',age:'34',photo:null,looks:'Высокая, коротко стриженная, на левой руке старый шрам от ожога. Носит отцовский свитер грубой вязки.',traits:'Упрямая и наблюдательная. Не любит просить о помощи, зато всегда держит слово.'},
+   {id:petr,name:'Пётр Ильич Горбунов',age:'71',photo:null,looks:'Сухой, сутулый, с аккуратной седой бородкой. Ходит с тростью, но почти на неё не опирается.',traits:'Прежний смотритель маяка. Вежливый и скрытный, отвечает вопросом на вопрос.'}],
+  events:[
+   {id:uid(),title:'Маяк гаснет',desc:'В ночь на четверг маяк перестаёт светить. В посёлке этого никто не замечает, кроме Веры.',chapterId:c1,charIds:[vera]},
+   {id:uid(),title:'Письмо без марки',desc:'Наверху башни Вера находит конверт со своим именем. Письмо оставил прежний смотритель.',chapterId:c2,charIds:[vera,petr]}]};
+ const h={};
+ h[c1]='<p>Маяк на мысе Сухом погас в ночь на четверг, и никто в посёлке этого не заметил. Корабли здесь не ходили уже лет двадцать, а свет над скалой давно стал чем-то вроде старых часов на станции: его видишь, только когда он ломается.</p><p>Вера заметила. Она приехала накануне с одним чемоданом и ключом, который ей вручили в районной администрации вместе с папкой бумаг и пожеланием «не геройствовать». Ключ был тяжёлый, латунный, с биркой, на которой выцветшими чернилами значилось: «Башня. Верх».</p><p>Утром она поднялась по винтовой лестнице, считая ступени. Сто сорок две. На сто двадцатой пришлось остановиться и переждать, пока сердце перестанет стучать в горле.</p><div class="scene" contenteditable="false">* * *</div><p>Наверху пахло керосином и морем. Линза стояла целая, лампа тоже, а на полу, у самой двери, лежал конверт без марки. На нём было написано её имя.</p>';
+ h[c2]='<p>Вера не открывала конверт до вечера. Она мыла окна, разбирала шкаф с журналами вахты, записывала в блокнот всё, что требовало ремонта. Конверт лежал на столе и ждал.</p><p>Почерк был незнакомый: острый, с длинными хвостами у букв «д» и «у». Так писали люди, которых в детстве ещё учили чистописанию.</p><p>«Если вы это читаете, значит, вас прислали вместо меня, — начиналось письмо. — Не верьте тем, кто скажет, что маяк больше не нужен».</p>';
+ return{meta,h};
+}
+
+/* ---------- load ---------- */
+async function load(){
+ await Store.open();
+ let meta=await Store.get('meta');
+ if(!meta||!Array.isArray(meta.items)){const s=sampleBook();meta=s.meta;for(const id in s.h){html[id]=s.h[id];await Store.set('ch:'+id,s.h[id]);}await Store.set('meta',meta);}
+ else{for(const it of meta.items)if(it.t==='ch'){html[it.id]=(await Store.get('ch:'+it.id))||'<p><br></p>';}}
+ book=meta;book.characters=book.characters||[];book.events=book.events||[];
+ for(const id in html)wc[id]=countWords(html[id]);
+ let last=null;try{last=localStorage.getItem('kp:last')}catch(e){}
+ const first=(last&&item(last)&&item(last).t==='ch')?last:(chapters()[0]||{}).id;
+ renderAll();
+ if(first)openChapter(first,{keepDrawer:true});else showEmpty();
+ if(Store.mode!=='idb')toast(Store.mode==='ls'?'Сохраняю в упрощённом хранилище браузера. Делайте копию книги в меню «⋯».':'Хранилище недоступно: изменения пропадут после закрытия. Сохраните копию книги в меню «⋯».',6000);
+}
+
+/* ---------- rendering: side ---------- */
+function renderAll(){renderHead();renderToc();renderChars();renderEvents();renderTotals();}
+function renderHead(){$('#sideTitle').textContent=book.title||'Без названия';$('#sideAuthor').textContent=book.author||'';}
+function renderTotals(){const w=chapters().reduce((s,c)=>s+(wc[c.id]||0),0);$('#totWords').textContent=w.toLocaleString('ru-RU');$('#totPages').textContent='≈'+Math.max(1,Math.ceil(w/250));}
+function renderToc(){
+ const box=$('#toc');box.textContent='';
+ $('#editToc').classList.toggle('on',editToc);
+ const n=book.items.length;
+ book.items.forEach((it,idx)=>{
+  const ctl=editToc?el('div',{class:'row-ctl'},
+    el('button',{'aria-label':'Выше',html:ICON.up,onclick:()=>move(idx,-1),disabled:idx===0?true:null}),
+    el('button',{'aria-label':'Ниже',html:ICON.down,onclick:()=>move(idx,1),disabled:idx===n-1?true:null}),
+    el('button',{'aria-label':'Переименовать',html:ICON.edit,onclick:()=>rename(it)}),
+    el('button',{class:'del','aria-label':'Удалить',html:ICON.del,onclick:()=>removeItem(it)})):null;
+  if(it.t==='part'){
+   box.append(el('div',{class:'toc-part'},el('div',{class:'pl'},el('small',{text:partLabel(partNo(it.id))}),el('span',{text:it.title||'Без названия'})),ctl||el('div',{class:'row-ctl'},el('button',{'aria-label':'Переименовать часть',html:ICON.edit,onclick:()=>rename(it)}))));
+  }else{
+   const w=wc[it.id]||0;
+   box.append(el('div',{class:'toc-ch'+(it.id===cur?' active':'')},
+    el('button',{class:'go',onclick:()=>openChapter(it.id)},el('span',{class:'n',text:chNum(it.id)+'.'}),el('span',{class:'t',text:it.title||'Без названия'}),editToc?null:el('span',{class:'w',text:w>=1000?(w/1000).toFixed(1).replace('.',',')+' тыс.':String(w)})),ctl));
+  }
+ });
+ const note=$('#sampleNote');note.textContent='';
+ if(book.sample)note.append(el('div',{class:'note'},'Это пример книги, чтобы было видно, как всё выглядит. Начать свою можно в меню ',el('b',{text:'⋯ → Новая книга'}),', или просто перепишите этот текст.'));
+}
+function move(idx,d){const j=idx+d;if(j<0||j>=book.items.length)return;const a=book.items;[a[idx],a[j]]=[a[j],a[idx]];book.sample=false;saveMeta();renderToc();renderEvents();if(cur)renderChapterHead();}
+function rename(it){
+ const inp=el('input',{id:'renameInp',type:'text',value:it.title||'',enterkeyhint:'done'});
+ openModal(it.t==='part'?'Название части':'Название главы',[el('label',{class:'fld'},el('span',{text:it.t==='part'?partLabel(partNo(it.id)):'Глава '+chNum(it.id)}),inp)],
+  [{label:'Готово',primary:true,fn:()=>{it.title=inp.value.trim();book.sample=false;saveMeta();renderToc();renderEvents();if(it.id===cur){$('#chTitle').textContent=it.title;renderChapterHead();}if(it.t==='part'&&cur)renderChapterHead();closeModal();}}]);
+ inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('#mFoot .btn:not(.ghost)').click();}});
+ setTimeout(()=>{inp.focus();inp.select();},60);
+}
+async function removeItem(it){
+ if(it.t==='part'){
+  if(!await confirmBox('Убрать часть «'+(it.title||'без названия')+'»?','Главы останутся на месте и перейдут в предыдущую часть.','Убрать часть'))return;
+  book.items=book.items.filter(i=>i!==it);
+ }else{
+  if(!await confirmBox('Удалить главу «'+(it.title||'без названия')+'»?','Текст главы будет удалён без возможности восстановить.','Удалить главу'))return;
+  const idx=chapters().findIndex(c=>c.id===it.id);
+  book.items=book.items.filter(i=>i!==it);delete html[it.id];delete wc[it.id];Store.del('ch:'+it.id);
+  book.events.forEach(e=>{if(e.chapterId===it.id)e.chapterId=null;});
+  if(cur===it.id){const ch=chapters();cur=null;if(ch.length)openChapter((ch[Math.min(idx,ch.length-1)]).id,{keepDrawer:true});else showEmpty();}
+ }
+ book.sample=false;saveMeta();renderAll();
+}
+function addChapter(){
+ const id=uid();let at=book.items.length;
+ if(cur){const i=book.items.findIndex(x=>x.id===cur);let j=i+1;while(j<book.items.length&&book.items[j].t!=='part'){j++;}at=j;}
+ book.items.splice(at,0,{t:'ch',id,title:''});html[id]='<p><br></p>';wc[id]=0;Store.set('ch:'+id,html[id]);
+ book.sample=false;saveMeta();renderAll();openChapter(id);setTimeout(()=>$('#chTitle').focus(),80);
+}
+function addPart(){
+ const id=uid();let at=book.items.length;
+ if(cur){const i=book.items.findIndex(x=>x.id===cur);at=i+1;}
+ book.items.splice(at,0,{t:'part',id,title:''});book.sample=false;saveMeta();renderToc();
+ rename(book.items[at]);
+}
+
+/* ---------- characters & events ---------- */
+function initials(n){return (n||'?').trim().split(/\s+/).slice(0,2).map(s=>s[0]).join('').toUpperCase()||'?';}
+function ava(c,cls){const a=el('div',{class:'ava '+(cls||'')});if(c.photo){a.style.backgroundImage='url("'+c.photo+'")';}else a.textContent=initials(c.name);return a;}
+function renderChars(){
+ const box=$('#chars');box.textContent='';
+ if(!book.characters.length)box.append(el('div',{class:'muted',text:'Карточки героев: фото, имя, возраст, внешность и характер. Удобно сверяться, пока пишете.'}));
+ book.characters.forEach(c=>{
+  const sub=[c.age?c.age+' '+plural(+c.age||0,'год','года','лет'):null,c.traits||c.looks].filter(Boolean).join(' · ');
+  box.append(el('button',{class:'card',onclick:()=>editChar(c)},ava(c),el('div',{class:'card-b'},el('b',{text:c.name||'Без имени'}),sub?el('small',{text:sub}):null)));
+ });
+ box.append(el('button',{class:'add-btn',html:ICON.plus+'Новый персонаж',onclick:()=>editChar(null)}));
+}
+function chapterOrder(id){if(!id)return 1e9;const i=chapters().findIndex(c=>c.id===id);return i<0?1e9:i;}
+function renderEvents(){
+ const box=$('#events');box.textContent='';
+ if(!book.events.length)box.append(el('div',{class:'muted',text:'Важные события сюжета: что произошло, в какой главе и кто участвует. Список идёт в порядке глав.'}));
+ [...book.events].sort((a,b)=>chapterOrder(a.chapterId)-chapterOrder(b.chapterId)).forEach(e=>{
+  const ch=e.chapterId&&item(e.chapterId);
+  const who=(e.charIds||[]).map(id=>book.characters.find(c=>c.id===id)).filter(Boolean);
+  box.append(el('button',{class:'card',onclick:()=>editEvent(e)},el('div',{class:'card-b'},
+   el('span',{class:'ev-ch',text:ch?'Глава '+chNum(ch.id)+(ch.title?' · '+ch.title:''):'Глава не указана'}),
+   el('b',{text:e.title||'Без названия'}),e.desc?el('small',{text:e.desc}):null,
+   who.length?el('div',{class:'minis'},who.map(c=>el('span',{class:'mini',text:c.name}))):null)));
+ });
+ box.append(el('button',{class:'add-btn',html:ICON.plus+'Новое событие',onclick:()=>editEvent(null)}));
+}
+function editChar(c){
+ const isNew=!c;const d=c?{...c}:{id:uid(),name:'',age:'',photo:null,looks:'',traits:''};
+ const pv=ava(d);
+ const pick=el('button',{class:'link',type:'button',text:d.photo?'Заменить фото':'Добавить фото'});
+ const rm=el('button',{class:'link red',type:'button',text:'Убрать фото',hidden:!d.photo});
+ pick.onclick=()=>pickImage(800,url=>{d.photo=url;pv.style.backgroundImage='url("'+url+'")';pv.textContent='';pick.textContent='Заменить фото';rm.hidden=false;});
+ rm.onclick=()=>{d.photo=null;pv.style.backgroundImage='';pv.textContent=initials(d.name);rm.hidden=true;pick.textContent='Добавить фото';};
+ const nm=el('input',{id:'cName',type:'text',value:d.name,placeholder:'Имя и фамилия'});
+ const ag=el('input',{id:'cAge',type:'text',inputmode:'numeric',value:d.age,placeholder:'лет'});
+ const lk=el('textarea',{id:'cLooks',placeholder:'Рост, цвет глаз и волос, приметы, манера одеваться'});lk.value=d.looks||'';
+ const tr=el('textarea',{id:'cTraits',placeholder:'Темперамент, привычки, страхи, чего хочет'});tr.value=d.traits||'';
+ nm.oninput=()=>{if(!d.photo)pv.textContent=initials(nm.value);};
+ const evs=book.events.filter(e=>(e.charIds||[]).includes(d.id));
+ openModal(isNew?'Новый персонаж':'Персонаж',[
+  el('div',{class:'photo-pick'},pv,el('div',{class:'acts'},pick,rm)),
+  el('div',{class:'row2'},el('label',{class:'fld'},el('span',{text:'Имя'}),nm),el('label',{class:'fld'},el('span',{text:'Возраст'}),ag)),
+  el('label',{class:'fld'},el('span',{text:'Особенности внешности'}),lk),
+  el('label',{class:'fld'},el('span',{text:'Характер'}),tr),
+  evs.length?el('div',{class:'fld'},el('span',{text:'Участвует в событиях'}),el('div',{class:'minis'},evs.map(e=>el('span',{class:'mini',text:e.title})))):null
+ ],[
+  isNew?null:{label:'Удалить',danger:true,fn:async()=>{if(!await confirmBox('Удалить персонажа «'+(d.name||'без имени')+'»?','Он также исчезнет из списков участников событий.','Удалить'))return;book.characters=book.characters.filter(x=>x.id!==d.id);book.events.forEach(e=>e.charIds=(e.charIds||[]).filter(i=>i!==d.id));book.sample=false;saveMeta();renderChars();renderEvents();}},
+  {label:'Сохранить',primary:true,fn:()=>{Object.assign(d,{name:nm.value.trim(),age:ag.value.trim(),looks:lk.value.trim(),traits:tr.value.trim()});
+   if(isNew)book.characters.push(d);else Object.assign(c,d);book.sample=false;saveMeta();renderChars();renderEvents();closeModal();toast('Персонаж сохранён');}}
+ ]);
+ if(isNew)setTimeout(()=>nm.focus(),80);
+}
+function editEvent(e){
+ const isNew=!e;const d=e?{...e,charIds:[...(e.charIds||[])]}:{id:uid(),title:'',desc:'',chapterId:cur,charIds:[]};
+ const tt=el('input',{id:'eTitle',type:'text',value:d.title,placeholder:'Что произошло'});
+ const ds=el('textarea',{id:'eDesc',placeholder:'Кратко: суть события и к чему оно ведёт'});ds.value=d.desc||'';
+ const sel=el('select',{id:'eCh'},el('option',{value:'',text:'— не указана —'}),chapters().map(c=>el('option',{value:c.id,text:'Глава '+chNum(c.id)+(c.title?'. '+c.title:''),selected:c.id===d.chapterId?true:null})));
+ const checks=el('div',{class:'checks'},book.characters.length?book.characters.map(c=>el('label',null,el('input',{type:'checkbox',value:c.id,checked:d.charIds.includes(c.id)?true:null}),c.name||'Без имени')):el('span',{class:'fine',text:'Сначала добавьте персонажей во вкладке «Герои».'}));
+ openModal(isNew?'Новое событие':'Событие',[
+  el('label',{class:'fld'},el('span',{text:'Название'}),tt),
+  el('label',{class:'fld'},el('span',{text:'Краткое описание'}),ds),
+  el('label',{class:'fld'},el('span',{text:'В какой главе'}),sel),
+  el('div',{class:'fld'},el('span',{text:'Участвуют'}),checks)
+ ],[
+  isNew?null:{label:'Удалить',danger:true,fn:async()=>{if(!await confirmBox('Удалить событие «'+(d.title||'без названия')+'»?','','Удалить'))return;book.events=book.events.filter(x=>x.id!==d.id);book.sample=false;saveMeta();renderEvents();renderChars();}},
+  d.chapterId&&!isNew?{label:'К главе',ghost:true,fn:()=>{closeModal();openChapter(d.chapterId);}}:null,
+  {label:'Сохранить',primary:true,fn:()=>{d.title=tt.value.trim();d.desc=ds.value.trim();d.chapterId=sel.value||null;d.charIds=[...checks.querySelectorAll('input:checked')].map(i=>i.value);
+   if(isNew)book.events.push(d);else Object.assign(e,d);book.sample=false;saveMeta();renderEvents();renderChars();closeModal();toast('Событие сохранено');}}
+ ]);
+ if(isNew)setTimeout(()=>tt.focus(),80);
+}
+
+/* ---------- editor ---------- */
+const prose=$('#prose'),titleEl=$('#chTitle');
+try{document.execCommand('defaultParagraphSeparator',false,'p');}catch(e){}
+try{titleEl.contentEditable='plaintext-only';if(titleEl.contentEditable!=='plaintext-only')titleEl.contentEditable='true';}catch(e){titleEl.contentEditable='true';}
+function showEmpty(){$('#sheet').hidden=true;$('#empty').hidden=false;$('#bar').hidden=true;$('#topTitle').textContent=book.title||'Книга';$('#topSmall').textContent='Книга';}
+function renderChapterHead(){
+ const it=item(cur);if(!it)return;const p=partOf(cur);
+ $('#partLine').textContent=p?partLabel(partNo(p.id))+(p.title?' · '+p.title:''):'';
+ $('#chLabel').textContent='Глава '+chNum(cur);
+ $('#topSmall').textContent='Глава '+chNum(cur);$('#topTitle').textContent=it.title||'Без названия';
+}
+function openChapter(id,opt={}){
+ if(cur&&timers['ch:'+cur]){clearTimeout(timers['ch:'+cur]);delete timers['ch:'+cur];saveChNow(cur);}
+ const it=item(id);if(!it)return;cur=id;
+ $('#sheet').hidden=false;$('#empty').hidden=true;$('#bar').hidden=false;
+ titleEl.textContent=it.title||'';prose.innerHTML=html[id]||'<p><br></p>';ensureBlocks();
+ renderChapterHead();renderToc();
+ try{localStorage.setItem('kp:last',id)}catch(e){}
+ if(!opt.keepDrawer)closeDrawer();
+ if(opt.find)requestAnimationFrame(()=>highlightOcc(opt.find.q,opt.find.occ));
+ else window.scrollTo(0,0);
+}
+function ensureBlocks(){
+ if(!prose.firstElementChild&&!prose.textContent.trim()){prose.innerHTML='<p><br></p>';return;}
+ for(const n of [...prose.childNodes]){if(n.nodeType===3&&n.nodeValue.trim()){const p=document.createElement('p');prose.insertBefore(p,n);p.append(n);}}
+}
+function onProse(){clearHit();ensureBlocks();html[cur]=prose.innerHTML;wc[cur]=countWords(html[cur]);saveCh(cur);later('tot',()=>{renderTotals();if(tab==='toc')renderToc();},800);}
+prose.addEventListener('input',onProse);
+titleEl.addEventListener('input',()=>{const it=item(cur);if(!it)return;it.title=titleEl.textContent.replace(/\s+/g,' ').trim();book.sample=false;saveMeta();$('#topTitle').textContent=it.title||'Без названия';later('toc',()=>{renderToc();renderEvents();},500);});
+titleEl.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();focusProseStart();}});
+titleEl.addEventListener('paste',e=>{e.preventDefault();const t=(e.clipboardData.getData('text/plain')||'').replace(/\s+/g,' ');document.execCommand('insertText',false,t);});
+function focusProseStart(){prose.focus();const r=document.createRange();r.setStart(prose.firstChild||prose,0);r.collapse(true);const s=getSelection();s.removeAllRanges();s.addRange(r);}
+prose.addEventListener('paste',e=>{
+ const t=e.clipboardData&&e.clipboardData.getData('text/plain');if(t==null)return;e.preventDefault();
+ const lines=t.replace(/\r/g,'').split(/\n+/).map(s=>s.trim()).filter(Boolean);
+ if(lines.length<=1)document.execCommand('insertText',false,lines[0]||'');
+ else document.execCommand('insertHTML',false,lines.map(l=>'<p>'+esc(l)+'</p>').join(''));
+});
+prose.addEventListener('click',e=>{const img=e.target.closest('figure img');if(img)imageMenu(img.closest('figure'));});
+let savedRange=null;
+document.addEventListener('selectionchange',()=>{const s=getSelection();if(s.rangeCount&&prose.contains(s.anchorNode))savedRange=s.getRangeAt(0).cloneRange();});
+function blockOf(node){while(node&&node.parentNode!==prose)node=node.parentNode;return node&&node.parentNode===prose?node:null;}
+
+$('#bar').addEventListener('pointerdown',e=>{if(e.target.closest('.tb'))e.preventDefault();});
+$('#bar').addEventListener('click',e=>{
+ const b=e.target.closest('.tb');if(!b)return;const cmd=b.dataset.cmd;
+ if(cmd==='done'){prose.blur();titleEl.blur();return;}
+ if(cmd==='img'){pickImage(1400,url=>insertFigure(url));return;}
+ if(!prose.contains(getSelection().anchorNode)){if(savedRange){prose.focus();const s=getSelection();s.removeAllRanges();s.addRange(savedRange);}else{toast('Поставьте курсор в текст главы');return;}}
+ if(cmd==='bold'||cmd==='italic')document.execCommand(cmd);
+ else if(cmd==='h2'||cmd==='p')document.execCommand('formatBlock',false,'<'+cmd+'>');
+ else if(cmd==='scene'){const blk=blockOf(getSelection().anchorNode);const sc=el('div',{class:'scene',contenteditable:'false',text:'* * *'});const np=el('p',null,el('br'));
+  if(blk){blk.after(sc);sc.after(np);}else{prose.append(sc,np);}placeCaret(np);}
+ onProse();
+});
+function placeCaret(node){const r=document.createRange();r.setStart(node,0);r.collapse(true);const s=getSelection();s.removeAllRanges();s.addRange(r);}
+function insertFigure(url){
+ const fig=el('figure',{contenteditable:'false'},el('img',{src:url,alt:''}),el('figcaption',{contenteditable:'true'}));
+ const np=el('p',null,el('br'));
+ const blk=savedRange?blockOf(savedRange.startContainer):null;
+ if(blk){blk.after(fig);fig.after(np);}else prose.append(fig,np);
+ onProse();setTimeout(()=>fig.scrollIntoView({block:'center',behavior:'smooth'}),50);
+}
+function imageMenu(fig){
+ const src=fig.querySelector('img').src;
+ openModal('Картинка',[el('img',{src,style:'max-width:100%;max-height:40vh;border-radius:6px;margin:0 auto;display:block'}),el('div',{class:'fine',text:'Подпись можно написать прямо под картинкой в тексте.'})],
+  [{label:'Удалить картинку',danger:true,fn:()=>{const nx=fig.nextElementSibling;fig.remove();if(nx&&nx.tagName==='P'&&!nx.textContent.trim()&&nx.previousElementSibling&&nx.previousElementSibling.tagName==='P')nx.remove();onProse();closeModal();}},
+   {label:'Заменить',ghost:true,fn:()=>{closeModal();pickImage(1400,url=>{fig.querySelector('img').src=url;onProse();});}},
+   {label:'Готово',primary:true,fn:closeModal}]);
+}
+
+/* ---------- images: shrink on device before storing ---------- */
+let imgCb=null;
+function pickImage(max,cb){imgCb={max,cb};const f=$('#fileImg');f.value='';f.click();}
+$('#fileImg').addEventListener('change',async e=>{const file=e.target.files[0];if(!file||!imgCb)return;const {max,cb}=imgCb;imgCb=null;
+ try{cb(await shrink(file,max));}catch(err){toast('Не получилось открыть картинку. Попробуйте JPEG или PNG.');}});
+function shrink(file,max){return new Promise((res,rej)=>{const url=URL.createObjectURL(file);const im=new Image();
+ im.onload=()=>{const k=Math.min(1,max/Math.max(im.naturalWidth,im.naturalHeight));const c=document.createElement('canvas');c.width=Math.round(im.naturalWidth*k);c.height=Math.round(im.naturalHeight*k);
+  const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);g.drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(url);res(c.toDataURL('image/jpeg',.86));};
+ im.onerror=()=>{URL.revokeObjectURL(url);rej();};im.src=url;});}
+
+/* ---------- search ---------- */
+function runSearch(){
+ const q=norm($('#q').value.trim());const box=$('#hits');box.textContent='';
+ if(q.length<2){box.append(el('div',{class:'muted',text:'Введите хотя бы две буквы. Ищу во всех главах, в заголовках и подписях к картинкам. Буквы «е» и «ё» считаются одинаковыми.'}));return;}
+ let total=0;
+ for(const c of chapters()){
+  const raw=(c.id===cur?textMap(prose).text:textMap(parse(html[c.id])).text);const t=norm(raw);
+  if(norm(c.title||'').includes(q)&&total<300){total++;box.append(el('button',{class:'hit',onclick:()=>openChapter(c.id)},el('small',{text:'Глава '+chNum(c.id)+' · название'}),el('span',{html:mark(c.title,q)})));}
+  let i=t.indexOf(q),occ=0;
+  while(i>=0&&total<300){
+   const a=Math.max(0,i-48),b=Math.min(raw.length,i+q.length+60);
+   const snip=(a>0?'…':'')+esc(raw.slice(a,i))+'<mark>'+esc(raw.slice(i,i+q.length))+'</mark>'+esc(raw.slice(i+q.length,b))+(b<raw.length?'…':'');
+   const o=occ;box.append(el('button',{class:'hit',onclick:()=>openChapter(c.id,{find:{q,occ:o}})},el('small',{text:'Глава '+chNum(c.id)+(c.title?' · '+c.title:'')}),el('span',{html:snip.replace(/\n/g,' ')})));
+   total++;occ++;i=t.indexOf(q,i+q.length);
+  }
+ }
+ if(!total)box.append(el('div',{class:'muted',text:'Ничего не нашлось. Попробуйте одно слово или его начало.'}));
+ else if(total>=300)box.append(el('div',{class:'muted',text:'Показаны первые 300 совпадений. Уточните запрос.'}));
+}
+function mark(s,q){const n=norm(s);const i=n.indexOf(q);if(i<0)return esc(s);return esc(s.slice(0,i))+'<mark>'+esc(s.slice(i,i+q.length))+'</mark>'+esc(s.slice(i+q.length));}
+$('#q').addEventListener('input',()=>later('search',runSearch,180));
+let hitTimer=null;
+function clearHit(){try{if(window.CSS&&CSS.highlights)CSS.highlights.delete('hit');}catch(e){}}
+function highlightOcc(q,occ){
+ const {text,map}=textMap(prose);const t=norm(text);let i=-1;for(let k=0;k<=occ;k++){i=t.indexOf(q,i+(k?q.length:0));if(i<0)return;}
+ const loc=pos=>{for(let k=map.length-1;k>=0;k--){if(map[k][1]<=pos)return[map[k][0],pos-map[k][1]];}return null;};
+ const s=loc(i),e=loc(i+q.length);if(!s||!e)return;
+ const r=document.createRange();try{r.setStart(s[0],Math.min(s[1],s[0].length));r.setEnd(e[0],Math.min(e[1],e[0].length));}catch(err){return;}
+ const rect=r.getBoundingClientRect();window.scrollTo({top:window.scrollY+rect.top-window.innerHeight*.35,behavior:'smooth'});
+ try{if(window.CSS&&CSS.highlights&&window.Highlight){CSS.highlights.set('hit',new Highlight(r));clearTimeout(hitTimer);hitTimer=setTimeout(clearHit,6000);return;}}catch(err){}
+ const sel=getSelection();sel.removeAllRanges();sel.addRange(r);
+}
+
+/* ---------- drawer & tabs ---------- */
+const side=$('#side'),scrim=$('#scrim');
+const wide=()=>matchMedia('(min-width:960px)').matches;
+function openDrawer(t){if(t)setTab(t);side.classList.add('open');scrim.classList.add('on');if(t==='find')setTimeout(()=>$('#q').focus(),260);}
+function closeDrawer(){side.classList.remove('open');scrim.classList.remove('on');}
+function setTab(t){tab=t;document.querySelectorAll('.tab').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===t));['toc','find','chars','events'].forEach(x=>$('#pane-'+x).hidden=x!==t);if(t==='toc')renderToc();}
+document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{setTab(b.dataset.tab);if(b.dataset.tab==='find')setTimeout(()=>$('#q').focus(),50);}));
+$('#menuBtn').onclick=()=>openDrawer();
+$('#searchBtn').onclick=()=>{openDrawer('find');if(wide())setTimeout(()=>$('#q').focus(),50);};
+scrim.onclick=closeDrawer;
+$('#addCh').onclick=addChapter;$('#emptyAdd').onclick=addChapter;$('#addPart').onclick=addPart;
+$('#editToc').onclick=()=>{editToc=!editToc;renderToc();};
+
+/* ---------- modal ---------- */
+const modal=$('#modal');let modalResolve=null;
+function openModal(title,body,actions){
+ $('#mTitle').textContent=title;const b=$('#mBody');b.textContent='';body.filter(Boolean).forEach(n=>b.append(n));
+ const f=$('#mFoot');f.textContent='';let spAdded=false;
+ (actions||[]).filter(Boolean).forEach(a=>{
+  if(!a.danger&&!spAdded){f.append(el('span',{class:'sp'}));spAdded=true;}
+  f.append(el('button',{class:'btn'+(a.danger?' danger':a.ghost?' ghost':''),type:'button',text:a.label,onclick:a.fn}));
+ });
+ if(!spAdded)f.append(el('span',{class:'sp'}));
+ f.hidden=!(actions||[]).filter(Boolean).length;
+ modal.hidden=false;
+}
+function closeModal(){modal.hidden=true;if(modalResolve){modalResolve(false);modalResolve=null;}}
+$('#mClose').onclick=closeModal;modal.addEventListener('click',e=>{if(e.target===modal)closeModal();});
+function confirmBox(title,text,ok){return new Promise(res=>{
+ const prevBody=[...$('#mBody').childNodes],prevFoot=[...$('#mFoot').childNodes],prevTitle=$('#mTitle').textContent,wasOpen=!modal.hidden;
+ const restore=v=>{modalResolve=null;if(wasOpen){$('#mTitle').textContent=prevTitle;$('#mBody').replaceChildren(...prevBody);$('#mFoot').replaceChildren(...prevFoot);$('#mFoot').hidden=false;if(v)modal.hidden=true;}else modal.hidden=true;res(v);};
+ openModal(title,[text?el('div',{class:'fine',text}):null],[{label:'Отмена',ghost:true,fn:()=>restore(false)},{label:ok,primary:true,fn:()=>restore(true)}]);
+ modalResolve=v=>res(v);
+});}
+let toastT=null;
+function toast(t,ms){document.querySelectorAll('.toast').forEach(x=>x.remove());const d=el('div',{class:'toast',role:'status',text:t});document.body.append(d);clearTimeout(toastT);toastT=setTimeout(()=>d.remove(),ms||2200);}
+
+/* ---------- book settings: title, covers, backup ---------- */
+$('#bookBtn').onclick=bookSettings;
+function bookSettings(){
+ const d={title:book.title||'',author:book.author||'',front:book.front,back:book.back,backText:book.backText||''};
+ const ti=el('input',{id:'bTitle',type:'text',value:d.title,placeholder:'Название книги'});
+ const au=el('input',{id:'bAuthor',type:'text',value:d.author,placeholder:'Имя автора'});
+ const bt=el('textarea',{id:'bBack',placeholder:'Аннотация на задней обложке'});bt.value=d.backText;
+ const slot=(key,label)=>{const th=el('div',{class:'cover-thumb'});const upd=()=>{th.style.backgroundImage=d[key]?'url("'+d[key]+'")':'';th.textContent=d[key]?'':(key==='front'?'Без картинки: будет обложка с названием':'Без картинки: будет аннотация');rm.hidden=!d[key];};
+  const pick=el('button',{class:'link',type:'button',text:'Выбрать картинку',onclick:()=>pickImage(1800,u=>{d[key]=u;upd();})});
+  const rm=el('button',{class:'link red',type:'button',text:'Убрать',onclick:()=>{d[key]=null;upd();}});upd();
+  return el('div',{class:'cover-slot'},el('span',{class:'fld',style:'gap:0'},el('span',{text:label})),th,pick,rm);};
+ openModal('Книга',[
+  el('label',{class:'fld'},el('span',{text:'Название'}),ti),
+  el('label',{class:'fld'},el('span',{text:'Автор'}),au),
+  el('div',{class:'cover-row'},slot('front','Обложка в начале'),slot('back','Обложка в конце')),
+  el('label',{class:'fld'},el('span',{text:'Текст на задней обложке'}),bt),
+  el('div',{class:'fine',text:'Формат страницы: 125 × 200 мм, как у романа в мягкой обложке. Для обложки подойдёт вертикальная картинка с пропорцией примерно 5 : 8.'}),
+  el('div',{class:'fld'},el('span',{text:'Резервная копия'}),
+   el('div',{class:'fine',text:'Книга хранится в памяти этого браузера на телефоне. Если очистить данные Safari или удалить приложение, текст пропадёт, поэтому время от времени сохраняйте копию в «Файлы».'}),
+   el('div',{style:'display:flex;gap:8px;flex-wrap:wrap'},
+    el('button',{class:'btn ghost',type:'button',text:'Сохранить копию',onclick:exportJson}),
+    el('button',{class:'btn ghost',type:'button',text:'Загрузить копию',onclick:()=>{const f=$('#fileJson');f.value='';f.click();}}))),
+  el('button',{class:'link red',type:'button',style:'align-self:flex-start',text:'Новая книга',onclick:newBook})
+ ],[{label:'Сохранить',primary:true,fn:()=>{book.title=ti.value.trim();book.author=au.value.trim();book.front=d.front;book.back=d.back;book.backText=bt.value;book.sample=false;saveMeta();renderAll();if(cur)renderChapterHead();else showEmpty();closeModal();toast('Сохранено');}}]);
+}
+async function newBook(){
+ if(!await confirmBox('Начать новую книгу?','Текущая книга, её персонажи и события будут удалены с устройства. Если она нужна, сначала сохраните копию.','Начать новую'))return;
+ await Store.clear();for(const k in html){delete html[k];delete wc[k];}
+ const id=uid();book={v:1,sample:false,title:'Новая книга',author:'',front:null,back:null,backText:'',items:[{t:'ch',id,title:''}],characters:[],events:[]};
+ html[id]='<p><br></p>';wc[id]=0;await Store.set('ch:'+id,html[id]);await Store.set('meta',book);
+ cur=null;renderAll();openChapter(id,{keepDrawer:true});closeModal();setTimeout(()=>titleEl.focus(),80);
+}
+function fullBook(){if(cur)html[cur]=prose.innerHTML;return{app:'kniga-pisatelya',v:1,savedAt:new Date().toISOString(),meta:book,chapters:html};}
+function safeName(s){return (s||'Книга').replace(/[\\/:*?"<>|]+/g,' ').replace(/\s+/g,' ').trim().slice(0,80)||'Книга';}
+async function exportJson(){
+ const d=new Date();const stamp=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+ await offerFile(safeName(book.title)+' — копия '+stamp+'.json',new Blob([JSON.stringify(fullBook())],{type:'application/json'}));
+}
+$('#fileJson').addEventListener('change',async e=>{
+ const f=e.target.files[0];if(!f)return;
+ try{const data=JSON.parse(await f.text());if(data.app!=='kniga-pisatelya'||!data.meta||!Array.isArray(data.meta.items))throw 0;
+  if(!await confirmBox('Загрузить копию «'+(data.meta.title||'')+'»?','Книга на устройстве будет заменена содержимым копии.','Загрузить'))return;
+  await Store.clear();for(const k in html){delete html[k];delete wc[k];}
+  book=data.meta;book.characters=book.characters||[];book.events=book.events||[];
+  for(const it of book.items)if(it.t==='ch'){html[it.id]=data.chapters[it.id]||'<p><br></p>';wc[it.id]=countWords(html[it.id]);await Store.set('ch:'+it.id,html[it.id]);}
+  await Store.set('meta',book);cur=null;renderAll();const c=chapters()[0];if(c)openChapter(c.id,{keepDrawer:true});else showEmpty();closeModal();toast('Копия загружена');
+ }catch(err){toast('Это не файл копии книги. Выберите файл .json, сохранённый из этого приложения.',4000);}
+});
+
+/* ---------- saving files to the phone ---------- */
+let dlP=null;
+function getDownloads(){if(!dlP){dlP=(window.claude&&window.claude.use)?Promise.race([window.claude.use('downloads'),new Promise(r=>setTimeout(()=>r(null),10000))]).catch(()=>null):Promise.resolve(null);}return dlP;}
+getDownloads();
+async function offerFile(name,blob){
+ const dl=await getDownloads();
+ if(dl){try{await dl.save({filename:name,data:blob});toast('Файл сохранён');return true;}
+  catch(err){if(err&&err.code==='declined')return false;if(err&&err.code==='rate_limited'){toast('Подождите пару секунд и нажмите ещё раз');return false;}if(!(err&&['unavailable','not_granted','capability_disabled','capability_removed'].includes(err.code))){toast('Не удалось сохранить файл: '+((err&&err.message)||'ошибка'),4000);return false;}}}
+ try{const u=URL.createObjectURL(blob);const a=el('a',{href:u,download:name});document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),60000);return true;}
+ catch(e){toast('В этом окне нельзя сохранить файл.',4000);return false;}
+}
+
+/* ---------- book layout (pagination) ---------- */
+const PW=472,PH=756,CH=640,LH=19.5;
+let laid=null;
+function newPage(kind){const p=el('div',{class:'page '+(kind||''),lang:'ru'});const b=el('div',{class:'pbody'});p.append(b);p._b=b;return p;}
+function fits(b){return b.scrollHeight<=CH+0.5;}
+function textLen(n){return n.textContent.length;}
+function slice(src,start,end){
+ const c=src.cloneNode(true);let pos=0;const tn=[];
+ (function w(n){for(const k of [...n.childNodes]){if(k.nodeType===3)tn.push(k);else if(k.nodeType===1){if(k.tagName==='BR'){k.remove();continue;}w(k);}}})(c);
+ for(const t of tn){const s=pos,e=pos+t.nodeValue.length;pos=e;
+  if(e<=start||s>=end)t.nodeValue='';else t.nodeValue=t.nodeValue.slice(Math.max(0,start-s),Math.min(t.nodeValue.length,end-s));}
+ c.querySelectorAll('b,i,em,strong,span,u').forEach(x=>{if(!x.textContent)x.remove();});
+ return c;
+}
+function prepBlocks(h){
+ const out=[];const src=parse(h);
+ for(const n of [...src.childNodes]){
+  if(n.nodeType===3){if(n.nodeValue.trim())out.push(el('p',null,n.nodeValue));continue;}
+  if(n.nodeType!==1)continue;
+  if(n.classList.contains('scene')){out.push(el('div',{class:'scene',text:'* * *'}));continue;}
+  if(n.tagName==='FIGURE'){const im=n.querySelector('img');if(!im)continue;const cap=n.querySelector('figcaption');const f=el('figure',null,el('img',{src:im.getAttribute('src'),alt:''}));if(cap&&cap.textContent.trim())f.append(el('figcaption',{text:cap.textContent.trim()}));out.push(f);continue;}
+  if(/^H[1-6]$/.test(n.tagName)){if(n.textContent.trim())out.push(el('h2',{text:n.textContent.trim()}));continue;}
+  if(!n.textContent.trim())continue;
+  const p=document.createElement('p');p.innerHTML=n.innerHTML;p.querySelectorAll('br').forEach(b=>b.remove());out.push(p);
+ }
+ let prev=null;for(const b of out){if(b.tagName==='P'&&(!prev||prev.tagName!=='P'))b.classList.add('first');prev=b;}
+ return out;
+}
+async function layoutBook(onStep){
+ await (document.fonts&&document.fonts.ready);
+ const host=$('#measure');host.textContent='';
+ const content=[];let pg=null,curCh=null;const starts={};
+ const push=kind=>{pg=newPage(kind);pg._ch=curCh;host.append(pg);content.push(pg);return pg;};
+ const tick=async()=>{if(content.length%8===0){onStep&&onStep(content.length);await new Promise(r=>setTimeout(r,0));}};
+ async function add(block){
+  const b=pg._b;
+  if(block.tagName==='FIGURE'){const im=block.querySelector('img');b.append(block);try{await im.decode();}catch(e){}if(fits(b))return;block.remove();if(b.childNodes.length){push('text');pg._b.append(block);}else b.append(block);return;}
+  b.append(block);
+  if(block.tagName==='H2'){if(b.scrollHeight+LH*2<=CH+0.5)return;block.remove();if(b.childNodes.length)push('text');pg._b.append(block);return;}
+  if(fits(b))return;block.remove();
+  if(block.tagName!=='P'){if(b.childNodes.length)push('text');pg._b.append(block);return;}
+  const text=block.textContent,cuts=[];const re=/\s+/g;let m;while((m=re.exec(text)))cuts.push(m.index+m[0].length);
+  let lo=0,hi=cuts.length-1,best=-1;
+  while(lo<=hi){const mid=(lo+hi)>>1;const h=slice(block,0,cuts[mid]);b.append(h);const ok=fits(b);h.remove();if(ok){best=mid;lo=mid+1;}else hi=mid-1;}
+  if(best<0){if(b.childNodes.length){push('text');await add(block);}else b.append(block);return;}
+  const head=slice(block,0,cuts[best]);head.classList.add('head');b.append(head);
+  const rest=slice(block,cuts[best],text.length);rest.classList.remove('first','head');rest.classList.add('cont');
+  push('text');await add(rest);
+ }
+ for(const it of book.items){
+  if(it.t==='part'){curCh=null;const p=push('part');p._noFolio=true;p.append(el('div',{class:'part-pg'},el('div',{class:'l',text:partLabel(partNo(it.id))}),it.title?el('div',{class:'t',text:it.title}):null));starts[it.id]=content.length-1;continue;}
+  curCh=it;const p=push('text open');p._open=true;starts[it.id]=content.length-1;
+  p._b.append(el('div',{class:'ch-open'},el('div',{class:'lab',text:'Глава '+chNum(it.id)}),it.title?el('div',{class:'tit',text:it.title}):null,el('div',{class:'rule'})));
+  const blocks=prepBlocks(it.id===cur?prose.innerHTML:html[it.id]);
+  for(const bl of blocks){await add(bl);await tick();}
+ }
+ // contents pages
+ const tocRows=n=>book.items.map(it=>{const num=n?String(n[it.id]):'000';
+  return it.t==='part'?el('div',{class:'toc-r pt'},el('span',{class:'tt',text:partLabel(partNo(it.id))+(it.title?'. '+it.title:'')}),el('span',{class:'dd'}),el('span',{class:'nn',text:num}))
+   :el('div',{class:'toc-r'+(partOf(it.id)?' ch':'')},el('span',{class:'tt',text:chNum(it.id)+'. '+(it.title||'Без названия')}),el('span',{class:'dd'}),el('span',{class:'nn',text:num}));});
+ const buildToc=n=>{const pages=[];let p=newPage('toc');host.append(p);pages.push(p);p._b.append(el('div',{class:'toc-h',text:'Содержание'}));
+  for(const r of tocRows(n)){p._b.append(r);if(!fits(p._b)){r.remove();p=newPage('toc');host.append(p);pages.push(p);p._b.append(r);}}return pages;};
+ const tocCount=book.items.length?buildToc(null).length:0;
+ // numbering: title page is 1, contents follow, then text
+ const firstNum=2+tocCount;const nums={};
+ for(const id in starts)nums[id]=firstNum+starts[id];
+ host.textContent='';content.forEach(p=>host.append(p));
+ const tocPages=book.items.length?buildToc(nums):[];
+ // front cover
+ const front=el('div',{class:'page cover',lang:'ru'});
+ if(book.front)front.style.backgroundImage='url("'+book.front+'")';
+ else front.append(el('div',{class:'cover-txt'},book.author?el('div',{class:'a',text:book.author}):null,el('div',{class:'t',text:book.title||'Без названия'}),el('div',{class:'r'})));
+ const title=el('div',{class:'page',lang:'ru'},el('div',{class:'tp'},book.author?el('div',{class:'a',text:book.author}):null,el('div',{class:'t',text:book.title||'Без названия'})));
+ const back=el('div',{class:'page cover',lang:'ru'});
+ if(book.back)back.style.backgroundImage='url("'+book.back+'")';else if(book.backText&&book.backText.trim())back.append(el('div',{class:'back-txt',text:book.backText.trim()}));
+ // folios, running heads, recto/verso
+ const all=[front,title,...tocPages,...content,back];
+ all.forEach((p,i)=>{const n=i;p.classList.remove('recto','verso');p.classList.add(n%2?'recto':'verso');
+  if(i<=1||i===all.length-1)return;
+  const isText=content.includes(p);
+  if(isText&&!p._noFolio)p.append(el('div',{class:'folio',text:String(n)}));
+  if(isText&&!p._open&&!p._noFolio){p.append(el('div',{class:'rh',text:n%2?(p._ch&&p._ch.title?p._ch.title:'Глава '+(p._ch?chNum(p._ch.id):'')):(book.title||'')}));}
+  if(!isText)p.append(el('div',{class:'folio',text:String(n)}));
+ });
+ host.textContent='';
+ return all;
+}
+
+/* ---------- preview ---------- */
+const prev=$('#prev'),busy=$('#busy');
+function setBusy(t,s){busy.hidden=!t;if(t){$('#busyT').textContent=t;$('#busyS').textContent=s||'';}}
+$('#prevBtn').onclick=openPreview;
+$('#prevClose').onclick=()=>{prev.hidden=true;$('#prevBody').textContent='';laid=null;};
+async function openPreview(){
+ flushAll();prose.blur();titleEl.blur();
+ setBusy('Верстаю книгу','Раскладываю текст по страницам…');
+ try{laid=await layoutBook(n=>{$('#busyS').textContent='Свёрстано страниц: '+n;});}
+ catch(e){setBusy(null);toast('Не получилось сверстать книгу: '+(e&&e.message||e),4000);return;}
+ const body=$('#prevBody');body.textContent='';prev.hidden=false;
+ laid.forEach(p=>{const w=el('div',{class:'pwrap'});w.append(p);body.append(w);});
+ scalePreview();
+ $('#prevInfo').textContent=laid.length+' '+plural(laid.length,'страница','страницы','страниц')+' · 125 × 200 мм';
+ body.scrollTop=0;setBusy(null);
+}
+function scalePreview(){if(prev.hidden)return;const body=$('#prevBody');const avail=body.clientWidth-32;const s=Math.min(1,avail/PW);
+ body.querySelectorAll('.pwrap').forEach(w=>{w.style.width=PW*s+'px';w.style.height=PH*s+'px';w.firstChild.style.transform='scale('+s+')';});}
+addEventListener('resize',()=>later('sc',scalePreview,120));
+
+/* ---------- PDF ---------- */
+function loadScript(src){return new Promise((res,rej)=>{if(document.querySelector('script[src="'+src+'"]'))return res();const s=el('script',{src});s.onload=res;s.onerror=()=>rej(new Error('нет связи с сервером библиотек'));document.head.append(s);});}
+$('#pdfBtn').onclick=makePdf;
+async function makePdf(){
+ if(!laid)return;
+ setBusy('Готовлю PDF','Загружаю инструменты…');
+ try{
+  await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+  await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+  const {jsPDF}=window.jspdf;const pdf=new jsPDF({unit:'mm',format:[125,200],orientation:'portrait',compress:true});
+  const hostEl=$('#pdfHost');
+  for(let i=0;i<laid.length;i++){
+   $('#busyS').textContent='Страница '+(i+1)+' из '+laid.length;
+   const c=laid[i].cloneNode(true);c.style.transform='none';hostEl.append(c);
+   const cv=await window.html2canvas(c,{scale:2,backgroundColor:'#ffffff',logging:false,useCORS:true,width:PW,height:PH,windowWidth:PW,scrollX:0,scrollY:0});
+   c.remove();
+   if(i)pdf.addPage([125,200],'portrait');
+   pdf.addImage(cv.toDataURL('image/jpeg',.88),'JPEG',0,0,125,200,undefined,'FAST');
+   await new Promise(r=>setTimeout(r,0));
+  }
+  pdf.setProperties({title:book.title||'Книга',author:book.author||''});
+  const blob=pdf.output('blob');setBusy(null);
+  await offerFile(safeName(book.title)+'.pdf',blob);
+ }catch(e){setBusy(null);$('#pdfHost').textContent='';toast('PDF не получился: '+(e&&e.message||'ошибка')+'. Проверьте интернет и попробуйте ещё раз.',5000);}
+}
+
+/* ---------- keyboard-aware toolbar ---------- */
+const bar=$('#bar');
+if(window.visualViewport){const vv=window.visualViewport;const fix=()=>{const off=Math.max(0,window.innerHeight-vv.height-vv.offsetTop);bar.style.transform=off>40?'translateY(-'+off+'px)':'';bar.classList.toggle('kb',off>40);};vv.addEventListener('resize',fix);vv.addEventListener('scroll',fix);}
+
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')flushAll();});
+addEventListener('pagehide',flushAll);
+document.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='f'){e.preventDefault();openDrawer('find');setTimeout(()=>$('#q').focus(),60);}if(e.key==='Escape'){if(!modal.hidden)closeModal();else closeDrawer();}});
+
+load();
+})();
+</script>
+
+<script>
+if('serviceWorker' in navigator&&location.protocol.startsWith('http')){addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));}
+</script>
+</body>
+</html>
