@@ -935,7 +935,15 @@ load();
 </script>
 
 <script>
-if('serviceWorker' in navigator&&location.protocol.startsWith('http')){addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));}
+if('serviceWorker' in navigator&&location.protocol.startsWith('http')){
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+  navigator.serviceWorker.ready.then(async()=>{
+    try{const c=await caches.open('kniga-v2');if(!(await c.match('index.html')))return;
+      if(localStorage.getItem('kp:offline')==='2')return;localStorage.setItem('kp:offline','2');}catch(e){return;}
+    const d=document.createElement('div');d.className='toast';d.setAttribute('role','status');
+    d.textContent='Готово: теперь приложение открывается и без интернета';document.body.append(d);setTimeout(()=>d.remove(),4500);
+  }).catch(()=>{});
+}
 </script>
 </body>
 </html>
