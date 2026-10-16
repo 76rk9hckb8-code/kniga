@@ -152,9 +152,9 @@ main{padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px
 /* ---------- toolbar ---------- */
 .bar{position:fixed;left:0;right:0;bottom:0;z-index:35;background:rgba(252,252,249,.96);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-top:1px solid var(--line);
   padding-bottom:env(safe-area-inset-bottom,0px);padding-left:max(8px,env(safe-area-inset-left,0px));padding-right:max(8px,env(safe-area-inset-right,0px))}
-.bar.kb{padding-bottom:0;transition:opacity .12s}
+.bar.kb{padding-bottom:0;border-top:0;border-bottom:1px solid var(--line);box-shadow:0 4px 14px rgba(30,40,50,.08);transition:opacity .12s}
 .bar.moving{opacity:0;pointer-events:none}
-body.kb main{padding-bottom:65vh}
+body.kb main{padding-bottom:45vh}
 .bar-in{display:flex;justify-content:center;gap:2px;height:var(--bar-h);align-items:center;max-width:600px;margin:0 auto;overflow-x:auto}
 .tb{min-width:44px;height:40px;padding:0 8px;border-radius:10px;display:grid;place-items:center;font-size:15px;color:var(--ink);flex:none}
 .tb:active,.tb.on{background:var(--accent-soft);color:var(--accent)}
@@ -698,7 +698,7 @@ $('#bar').addEventListener('click',e=>{
  else if(cmd==='h2'||cmd==='p')document.execCommand('formatBlock',false,'<'+cmd+'>');
  else if(cmd==='scene'){const blk=blockOf(getSelection().anchorNode);const sc=el('div',{class:'scene',contenteditable:'false',text:'* * *'});const np=el('p',null,el('br'));
   if(blk){blk.after(sc);sc.after(np);}else{prose.append(sc,np);}placeCaret(np);}
- onProse();
+ onProse();setTimeout(revealCaret,30);
 });
 function placeCaret(node){const r=document.createRange();r.setStart(node,0);r.collapse(true);const s=getSelection();s.removeAllRanges();s.addRange(r);}
 function insertFigure(url){
@@ -990,14 +990,16 @@ async function makePdf(){
 
 /* ---------- keyboard-aware toolbar ---------- */
 const bar=$('#bar');
-// With the keyboard open the bar is pinned to the bottom of the *visible* area
-// (above the keyboard), hidden while the page scrolls, and the caret is kept above it.
-let kbOpen=false,scrollT=null,caretT=null;
+// With the keyboard open the bar sits at the TOP of the visible area. iOS itself keeps
+// the caret just above the keyboard, so the bar never covers the line being typed and we
+// never fight the user's scrolling. While the page scrolls the bar hides, then returns.
+let kbOpen=false,scrollT=null;
+function editing(){const a=document.activeElement;return !!a&&(a===prose||prose.contains(a)||a===titleEl);}
 function placeBar(){
  const vv=window.visualViewport;if(!vv)return;
- const kb=(window.innerHeight-vv.height)>120&&document.activeElement&&(prose.contains(document.activeElement)||document.activeElement===prose||document.activeElement===titleEl);
+ const kb=(window.innerHeight-vv.height)>120&&editing();
  if(kb!==kbOpen){kbOpen=kb;document.body.classList.toggle('kb',kb);bar.classList.toggle('kb',kb);}
- if(kb){bar.style.top=Math.round(vv.offsetTop+vv.height-bar.offsetHeight)+'px';bar.style.bottom='auto';}
+ if(kb){bar.style.top=Math.max(0,Math.round(vv.offsetTop))+'px';bar.style.bottom='auto';}
  else{bar.style.top='';bar.style.bottom='';}
 }
 function caretRect(){
@@ -1005,38 +1007,31 @@ function caretRect(){
  const node=sel.anchorNode;if(!node||!(prose.contains(node)||titleEl.contains(node)))return null;
  const r=sel.getRangeAt(0).cloneRange();r.collapse(false);
  let rect=r.getClientRects()[0]||r.getBoundingClientRect();
- if(!rect||(rect.top===0&&rect.bottom===0)){const b=(node.nodeType===1?node:node.parentElement);rect=b?b.getBoundingClientRect():null;
-  if(rect&&rect.height>60){rect={top:rect.bottom-30,bottom:rect.bottom};}}
+ if(!rect||(rect.top===0&&rect.bottom===0)){const b=(node.nodeType===1?node:node.parentElement);const br=b?b.getBoundingClientRect():null;rect=br?{top:br.top,bottom:Math.min(br.bottom,br.top+30)}:null;}
  return rect;
 }
-function keepCaretVisible(){
- if(!kbOpen)return;const vv=window.visualViewport;if(!vv)return;
- const r=caretRect();if(!r)return;
- const visBottom=vv.offsetTop+vv.height-bar.offsetHeight-18;
- const visTop=vv.offsetTop+16;
- if(r.bottom>visBottom)window.scrollBy(0,Math.ceil(r.bottom-visBottom));
- else if(r.top<visTop)window.scrollBy(0,Math.floor(r.top-visTop));
+// Only called after a toolbar button: bring the caret back into view if it was scrolled away.
+function revealCaret(){
+ const vv=window.visualViewport;const r=caretRect();if(!r)return;
+ const top=(vv?vv.offsetTop:0)+(kbOpen?bar.offsetHeight:0)+10;
+ const bottom=(vv?vv.offsetTop+vv.height:innerHeight)-(kbOpen?10:bar.offsetHeight+10);
+ if(r.top<top||r.bottom>bottom){const target=top+(bottom-top)*0.45;window.scrollBy(0,Math.round(r.top-target));setTimeout(placeBar,50);}
 }
-function soonCaret(){clearTimeout(caretT);caretT=setTimeout(()=>{placeBar();keepCaretVisible();},30);}
 function onScrollMove(){
  if(!kbOpen){placeBar();return;}
  bar.classList.add('moving');clearTimeout(scrollT);
- scrollT=setTimeout(()=>{placeBar();bar.classList.remove('moving');},140);
+ scrollT=setTimeout(()=>{placeBar();bar.classList.remove('moving');},160);
 }
 if(window.visualViewport){
  const vv=window.visualViewport;
- vv.addEventListener('resize',()=>{placeBar();soonCaret();});
+ vv.addEventListener('resize',onScrollMove);
  vv.addEventListener('scroll',onScrollMove);
 }
 addEventListener('scroll',onScrollMove,{passive:true});
-prose.addEventListener('input',soonCaret);
-prose.addEventListener('keyup',e=>{if(e.key==='Enter')soonCaret();});
-titleEl.addEventListener('input',soonCaret);
-document.addEventListener('selectionchange',()=>{if(kbOpen)soonCaret();});
-prose.addEventListener('focus',()=>setTimeout(()=>{placeBar();keepCaretVisible();},350));
-titleEl.addEventListener('focus',()=>setTimeout(()=>{placeBar();keepCaretVisible();},350));
-prose.addEventListener('blur',()=>setTimeout(placeBar,60));
-titleEl.addEventListener('blur',()=>setTimeout(placeBar,60));
+for(const t of [prose,titleEl]){
+ t.addEventListener('focus',()=>{setTimeout(placeBar,300);setTimeout(placeBar,700);});
+ t.addEventListener('blur',()=>setTimeout(placeBar,80));
+}
 
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')flushAll();});
 addEventListener('pagehide',flushAll);
@@ -1050,7 +1045,7 @@ load();
 if('serviceWorker' in navigator&&location.protocol.startsWith('http')){
   navigator.serviceWorker.register('sw.js').catch(()=>{});
   navigator.serviceWorker.ready.then(async()=>{
-    try{const c=await caches.open('kniga-v5');if(!(await c.match('index.html')))return;
+    try{const c=await caches.open('kniga-v6');if(!(await c.match('index.html')))return;
       if(localStorage.getItem('kp:offline')==='2')return;localStorage.setItem('kp:offline','2');}catch(e){return;}
     const d=document.createElement('div');d.className='toast';d.setAttribute('role','status');
     d.textContent='Готово: теперь приложение открывается и без интернета';document.body.append(d);setTimeout(()=>d.remove(),4500);
