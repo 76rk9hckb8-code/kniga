@@ -1,8 +1,9 @@
 // Offline cache: after one launch with internet the app opens without it.
-const CACHE='kniga-v7';
+const CACHE='kniga-v8';
 const SHELL=['./','index.html','manifest.webmanifest','icon-180.png','icon-192.png','icon-512.png'];
 const LIBS=['https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
-            'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'];
+            'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
+            'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js'];
 const FONT_CSS='https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&display=swap';
 
 async function put(c,url){try{const r=await fetch(url,{cache:'no-cache'});if(r.ok){await c.put(url,r.clone());return r;}}catch(_){}return null;}
