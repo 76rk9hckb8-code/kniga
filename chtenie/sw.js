@@ -1,5 +1,5 @@
 // Offline cache for the reading shelf.
-const CACHE='polka-v1';
+const CACHE='polka-v2';
 const SHELL=['./','index.html','manifest.webmanifest','icon-180.png','icon-192.png','icon-512.png'];
 const FONT_CSS='https://fonts.googleapis.com/css2?family=Prata&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&display=swap';
 async function put(c,url){try{const r=await fetch(url,{cache:'no-cache'});if(r.ok){await c.put(url,r.clone());return r;}}catch(_){}return null;}

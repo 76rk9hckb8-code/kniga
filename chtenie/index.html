@@ -8,7 +8,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Полка">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="theme-color" content="#E8EBE5">
+<meta name="theme-color" content="#F3EDEA">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" href="icon-192.png">
@@ -16,12 +16,13 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Prata&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&display=swap">
 <style>
-/* Layout: a wall with walnut shelves — covers stand on planks in a grid; book details slide up as a sheet; three sections in a bottom bar. Single light look by choice. */
+/* Burgundy library: a wall with walnut shelves — covers stand on planks in a grid; book details slide up as a sheet; three sections in a bottom bar. Single light look by choice. */
 :root{
-  --wall:#E8EBE5; --wall-2:#DADFD8; --card:#FAFBF8; --ink:#1F2421; --ink-2:#59605B; --ink-3:#8C938E; --line:#D3D8D1;
-  --wood:#80593A; --wood-2:#5C3F28; --wood-3:#A27A55;
-  --accent:#2F5D50; --accent-soft:#DCE8E2; --gold:#C38F22;
-  --st-reading:#2F5D50; --st-want:#4A6788; --st-done:#477A43; --st-dropped:#9A4C3F;
+  --wall:#F3EDEA; --wall-2:#E8DDD9; --card:#FDFAF9; --ink:#2B1A1E; --ink-2:#6B565A; --ink-3:#9E8A8D; --line:#E3D5D2;
+  --wood:#6E3B2E; --wood-2:#4A251C; --wood-3:#93604A;
+  --accent:#7B1E32; --accent-soft:#F3DFE3; --gold:#B88A3B;
+  --st-reading:#7B1E32; --st-want:#5D5470; --st-done:#56704C; --st-dropped:#8C7468;
+  --h1:#EBCAD1; --h2:#D3909E; --h3:#A64B61; --h4:#7B1E32;
   --f-display:'Prata','Literata',Georgia,serif;
   --f-book:'Literata',Georgia,'Times New Roman',serif;
   --f-ui:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
@@ -43,12 +44,12 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 .top{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;background:var(--wall)}
 .top-in{display:flex;align-items:center;gap:10px;padding-block:10px 8px;max-width:900px;margin:0 auto}
 .top h1{flex:1;margin:0;font-family:var(--f-display);font-weight:400;font-size:27px;line-height:1.1}
-.round{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:#fff;flex:none;box-shadow:0 3px 10px rgba(47,93,80,.3)}
+.round{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:#fff;flex:none;box-shadow:0 3px 10px rgba(123,30,50,.32)}
 .round .ico{width:22px;height:22px}
 .seg{display:flex;gap:6px;overflow-x:auto;padding-block:2px 10px;max-width:900px;margin:0 auto;scrollbar-width:none}
 .seg::-webkit-scrollbar{display:none}
 .seg button{flex:none;padding:7px 13px;border-radius:999px;border:1px solid var(--line);font-size:14px;color:var(--ink-2);background:var(--card);white-space:nowrap}
-.seg button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+.seg button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
 .seg b{font-weight:600;font-variant-numeric:tabular-nums;margin-left:4px;opacity:.7}
 
 main{padding-block:6px calc(var(--tab-h) + 30px + env(safe-area-inset-bottom,0px));max-width:900px;margin:0 auto}
@@ -117,7 +118,7 @@ main{padding-block:6px calc(var(--tab-h) + 30px + env(safe-area-inset-bottom,0px
 .heat-wrap{overflow-x:auto;margin:0 -4px;padding:0 4px}
 .heat{display:grid;grid-auto-flow:column;grid-template-rows:repeat(7,13px);gap:3px;width:max-content}
 .heat i{width:13px;height:13px;border-radius:3px;background:var(--wall-2)}
-.heat i.l1{background:#B9D2C6}.heat i.l2{background:#7FAE98}.heat i.l3{background:#4B826C}.heat i.l4{background:#2F5D50}
+.heat i.l1{background:var(--h1)}.heat i.l2{background:var(--h2)}.heat i.l3{background:var(--h3)}.heat i.l4{background:var(--h4)}
 .heat i.fut{background:transparent}
 .heat i.today{outline:1.5px solid var(--ink);outline-offset:0}
 .heat-legend{display:flex;gap:4px;align-items:center;justify-content:flex-end;margin-top:8px;font-size:11px;color:var(--ink-3)}
@@ -299,7 +300,7 @@ function progLabel(b){
  if(b.type==='audio')return hm(b.cur)+' из '+hm(t);
  return Math.round(frac(b)*100)+'% · '+(b.type==='pages'?'стр. ':'гл. ')+(+b.cur||0)+' из '+t;
 }
-const PAL=['#3E5A4E','#5B4B6B','#7A4A3A','#3E5470','#6B5B3A','#2F5F66','#704055','#4F5E3A','#5A4A40','#3B4A63'];
+const PAL=['#7B1E32','#4E2230','#8A4A3B','#3E3448','#6B5733','#4C5B48','#94545C','#2F3A4C','#6A3550','#5C463E'];
 function hashC(s){let h=2166136261;for(const ch of s||''){h^=ch.charCodeAt(0);h=Math.imul(h,16777619);}return PAL[(h>>>0)%PAL.length];}
 function coverEl(b,extra){
  const c=el('div',{class:'cov'});const src=covers[b.id];
@@ -428,7 +429,7 @@ function renderStats(){
    heat.append(el('i',{class:(d>t?'fut':n>=4?'l4':n>=3?'l3':n>=2?'l2':n?'l1':'')+(d===t?' today':''),title:human(d)+(n?': '+n+' '+plural(n,'запись','записи','записей'):'')}));}
  }
  const hw=el('div',{class:'heat-wrap'},months,heat);hc.append(hw);
- hc.append(el('div',{class:'heat-legend'},'меньше',el('i',{style:'background:var(--wall-2)'}),el('i',{class:'',style:'background:#B9D2C6'}),el('i',{style:'background:#7FAE98'}),el('i',{style:'background:#4B826C'}),el('i',{style:'background:#2F5D50'}),'больше'));
+ hc.append(el('div',{class:'heat-legend'},'меньше',el('i',{style:'background:var(--wall-2)'}),el('i',{style:'background:var(--h1)'}),el('i',{style:'background:var(--h2)'}),el('i',{style:'background:var(--h3)'}),el('i',{style:'background:var(--h4)'}),'больше'));
  st.append(hc);requestAnimationFrame(()=>{hw.scrollLeft=hw.scrollWidth;});
  // pages bars 14 days
  const days=[];for(let i=13;i>=0;i--)days.push(addDays(t,-i));
@@ -437,7 +438,7 @@ function renderStats(){
   const W=340,H=150,L=30,B=22,T=10,max=Math.max(...pv);const step=niceStep(max);const top=Math.ceil(max/step)*step;
   const bw=(W-L)/14;let svg='';
   for(let v=0;v<=top;v+=step){const y=T+(H-B-T)*(1-v/top);svg+=`<line x1="${L}" x2="${W}" y1="${y}" y2="${y}" stroke="var(--line)" stroke-width="1"/><text x="${L-6}" y="${y+3.5}" text-anchor="end">${v}</text>`;}
-  pv.forEach((v,i)=>{const h=(H-B-T)*(v/top);const x=L+i*bw+bw*.18;svg+=`<rect x="${x}" y="${T+(H-B-T)-h}" width="${bw*.64}" height="${Math.max(0,h)}" rx="2" fill="${i===13?'var(--accent)':'#7FAE98'}"/>`;
+  pv.forEach((v,i)=>{const h=(H-B-T)*(v/top);const x=L+i*bw+bw*.18;svg+=`<rect x="${x}" y="${T+(H-B-T)-h}" width="${bw*.64}" height="${Math.max(0,h)}" rx="2" fill="${i===13?'var(--accent)':'var(--h2)'}"/>`;
    if(i%2===1||i===13){const d=parseD(days[i]);svg+=`<text x="${x+bw*.32}" y="${H-6}" text-anchor="middle">${d.getDate()}</text>`;}});
   const avgP=Math.round(pv.reduce((a,b)=>a+b,0)/14);
   st.append(el('div',{class:'card bars'},el('h3',{class:'h2',text:'Страницы за две недели'}),el('div',{html:`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Страниц по дням">${svg}</svg>`}),el('div',{class:'muted',text:'В среднем '+avgP+' '+plural(avgP,'страница','страницы','страниц')+' в день. Учитываются книги, где прогресс отмечается по страницам.'})));
@@ -487,7 +488,7 @@ function renderBook(){
  const dates=[b.started?'Начата '+shortD(b.started):null,b.finished&&b.status==='done'?'дочитана '+shortD(b.finished):null].filter(Boolean).join(', ');
  body.append(el('div',{class:'hero'},coverEl(b),el('div',{class:'hero-t'},el('h2',{text:b.title||'Без названия'}),b.author?el('p',{text:b.author}):null,dates?el('div',{class:'dates',text:dates}):null)));
  // status
- const chips=el('div',{class:'chips'});for(const k of ['want','reading','done','dropped'])chips.append(el('button',{'data-st':k,'aria-pressed':b.status===k,text:STS[k],onclick:()=>setStatus(b,k)}));
+ const chips=el('div',{class:'chips'});for(const k of ['want','reading','done','dropped'])chips.append(el('button',{'data-st':k,'aria-pressed':String(b.status===k),text:STS[k],onclick:()=>setStatus(b,k)}));
  body.append(chips);
  // progress
  if(b.status!=='want'){
@@ -657,8 +658,8 @@ start();
 if('serviceWorker' in navigator&&location.protocol.startsWith('http')){
   navigator.serviceWorker.register('sw.js',{scope:'./'}).catch(()=>{});
   navigator.serviceWorker.ready.then(async()=>{
-    try{const c=await caches.open('polka-v1');if(!(await c.match('index.html')))return;
-      if(localStorage.getItem('rd:offline')==='1')return;localStorage.setItem('rd:offline','1');}catch(e){return;}
+    try{const c=await caches.open('polka-v2');if(!(await c.match('index.html')))return;
+      if(localStorage.getItem('rd:offline')==='2')return;localStorage.setItem('rd:offline','2');}catch(e){return;}
     const d=document.createElement('div');d.className='toast';d.setAttribute('role','status');
     d.textContent='Готово: полка открывается и без интернета';document.body.append(d);setTimeout(()=>d.remove(),4500);
   }).catch(()=>{});
