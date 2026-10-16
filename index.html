@@ -157,7 +157,8 @@ main{padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px
 body.kb main{padding-bottom:45vh}
 .bar-in{display:flex;justify-content:center;gap:2px;height:var(--bar-h);align-items:center;max-width:600px;margin:0 auto;overflow-x:auto}
 .tb{min-width:44px;height:40px;padding:0 8px;border-radius:10px;display:grid;place-items:center;font-size:15px;color:var(--ink);flex:none}
-.tb:active,.tb.on{background:var(--accent-soft);color:var(--accent)}
+.tb:active{background:var(--accent-soft);color:var(--accent)}
+.tb.on{background:var(--accent);color:#fff}
 .tb.serif{font-family:var(--font-book)}
 .tb .ico{width:20px;height:20px}
 .tb-sep{width:1px;height:22px;background:var(--line);margin:0 4px;flex:none}
@@ -698,8 +699,20 @@ $('#bar').addEventListener('click',e=>{
  else if(cmd==='h2'||cmd==='p')document.execCommand('formatBlock',false,'<'+cmd+'>');
  else if(cmd==='scene'){const blk=blockOf(getSelection().anchorNode);const sc=el('div',{class:'scene',contenteditable:'false',text:'* * *'});const np=el('p',null,el('br'));
   if(blk){blk.after(sc);sc.after(np);}else{prose.append(sc,np);}placeCaret(np);}
- onProse();setTimeout(revealCaret,30);
+ onProse();updateFmt();setTimeout(revealCaret,30);
 });
+// Light up Ж / К (and Заг) when the text at the caret is bold / italic / a subheading.
+function updateFmt(){
+ const sel=getSelection();const inProse=sel.rangeCount&&prose.contains(sel.anchorNode);
+ let b=false,i=false,h=false;
+ if(inProse){try{b=document.queryCommandState('bold');i=document.queryCommandState('italic');}catch(e){}
+  const blk=blockOf(sel.anchorNode);h=!!blk&&/^H[1-6]$/.test(blk.tagName);}
+ const set=(cmd,on)=>{const btn=document.querySelector('.tb[data-cmd="'+cmd+'"]');if(btn){btn.classList.toggle('on',on);btn.setAttribute('aria-pressed',String(on));}};
+ set('bold',b);set('italic',i);set('h2',h);
+}
+document.addEventListener('selectionchange',updateFmt);
+prose.addEventListener('input',updateFmt);
+prose.addEventListener('blur',()=>setTimeout(updateFmt,50));
 function placeCaret(node){const r=document.createRange();r.setStart(node,0);r.collapse(true);const s=getSelection();s.removeAllRanges();s.addRange(r);}
 function insertFigure(url){
  const fig=el('figure',{contenteditable:'false'},el('img',{src:url,alt:''}),el('figcaption',{contenteditable:'true'}));
@@ -1045,7 +1058,7 @@ load();
 if('serviceWorker' in navigator&&location.protocol.startsWith('http')){
   navigator.serviceWorker.register('sw.js').catch(()=>{});
   navigator.serviceWorker.ready.then(async()=>{
-    try{const c=await caches.open('kniga-v6');if(!(await c.match('index.html')))return;
+    try{const c=await caches.open('kniga-v7');if(!(await c.match('index.html')))return;
       if(localStorage.getItem('kp:offline')==='2')return;localStorage.setItem('kp:offline','2');}catch(e){return;}
     const d=document.createElement('div');d.className='toast';d.setAttribute('role','status');
     d.textContent='Готово: теперь приложение открывается и без интернета';document.body.append(d);setTimeout(()=>d.remove(),4500);
