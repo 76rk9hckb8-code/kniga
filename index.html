@@ -40,7 +40,7 @@ svg{display:block}
 .ico{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 
 /* ---------- header ---------- */
-.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;background:var(--desk);border-bottom:1px solid var(--desk-2);
+.top{position:fixed;top:0;left:0;right:0;padding-top:env(safe-area-inset-top,0px)!important;z-index:30;transition:transform .22s ease;background:var(--desk);border-bottom:1px solid var(--desk-2);
   padding-left:max(10px,env(safe-area-inset-left,0px));padding-right:max(10px,env(safe-area-inset-right,0px))}
 .top-in{display:flex;align-items:center;gap:4px;height:52px}
 .ibtn{width:42px;height:42px;display:grid;place-items:center;border-radius:12px;color:var(--ink);flex:none}
@@ -127,7 +127,8 @@ svg{display:block}
 .add-btn .ico{width:18px;height:18px}
 
 /* ---------- editor ---------- */
-main{padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px));padding-block:18px calc(var(--bar-h) + 40px + env(safe-area-inset-bottom,0px))}
+.top.hid{transform:translateY(-100%)}
+main{padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px));padding-block:71px calc(var(--bar-h) + 40px + env(safe-area-inset-bottom,0px))}
 .sheet{max-width:600px;margin:0 auto;background:var(--paper);box-shadow:0 1px 2px rgba(30,40,50,.08),0 8px 30px rgba(30,40,50,.07);border-radius:3px;
   padding:13% 10.5% 16%;min-height:70vh;box-sizing:border-box;position:relative}
 .sheet .part-line{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);text-align:center;margin-bottom:6px;font-family:var(--font-ui)}
@@ -255,6 +256,19 @@ body.kb main{padding-bottom:45vh}
 
 
 /* ---------- writer tools ---------- */
+.help-btn{display:flex;align-items:center;gap:6px;margin:0 16px;padding:8px 0;font-size:13px;color:var(--ink-2);border-bottom:1px solid var(--line);width:calc(100% - 32px)}
+.help-btn .ico{width:18px;height:18px;color:var(--accent)}
+.help{display:flex;flex-direction:column;gap:6px}
+.help details{border:1px solid var(--line);border-radius:12px;background:var(--field)}
+.help summary{padding:12px 14px;font-weight:600;font-size:15px;cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:8px}
+.help summary::-webkit-details-marker{display:none}
+.help summary::after{content:"+";color:var(--ink-3);font-weight:400}
+.help details[open] summary::after{content:"–"}
+.help .hb{padding:0 14px 12px;font-size:14px;line-height:1.5;color:var(--ink-2)}
+.help .hb p{margin:0 0 8px}.help .hb ul{margin:0 0 8px;padding-left:18px}.help .hb li{margin-bottom:4px}
+.help .hb b{color:var(--ink)}
+.help kbd{font-family:var(--font-book);display:inline-block;min-width:20px;text-align:center;padding:0 4px;border:1px solid var(--line);border-radius:5px;background:var(--paper);color:var(--ink)}
+
 #saveSt{margin-left:2px;letter-spacing:.04em}
 #saveSt.saving{color:var(--ink-3)}#saveSt.saved{color:var(--ok)}#saveSt.err{color:var(--danger);font-weight:700}
 .ch-foot{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:10px;font-family:var(--font-ui)}
@@ -312,7 +326,8 @@ body.focus .side,body.focus .scrim{display:none}
 @media (min-width:960px){
   .side{transform:none;box-shadow:none}
   .scrim{display:none}
-  .top,main{margin-left:var(--side-w)}
+  main{margin-left:var(--side-w)}
+  .top{left:var(--side-w)}
   .bar{left:var(--side-w)}
   #menuBtn{display:none}
 }
@@ -335,6 +350,7 @@ body.focus .side,body.focus .scrim{display:none}
 <div class="scrim" id="scrim"></div>
 <aside class="side" id="side" aria-label="Боковая панель">
   <button class="side-head" id="sideHead" aria-label="Все книги"><div class="book-name" id="sideTitle"></div><div class="book-author" id="sideAuthor"></div><span class="all">Все книги ›</span></button>
+  <button class="help-btn" id="helpBtn" type="button" aria-label="Как пользоваться"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 1 1 3.4 2.3c-.6.3-1 .8-1 1.5v.4"/><circle cx="12" cy="16.8" r=".6" fill="currentColor"/></svg>Как пользоваться</button>
   <div class="tabs" role="tablist">
     <button class="tab" role="tab" data-tab="toc" aria-selected="true">Главы</button>
     <button class="tab" role="tab" data-tab="find" aria-selected="false">Поиск</button>
@@ -892,6 +908,7 @@ function bookSettings(){
   el('div',{class:'cover-row'},slot('front','Обложка в начале'),slot('back','Обложка в конце')),
   el('label',{class:'fld'},el('span',{text:'Текст на задней обложке'}),bt),
   el('div',{class:'fine',text:'Формат страницы: 125 × 200 мм, как у романа в мягкой обложке. Для обложки подойдёт вертикальная картинка с пропорцией примерно 5 : 8.'}),
+  el('button',{class:'btn ghost',type:'button',style:'align-self:flex-start',text:'Как пользоваться приложением',onclick:()=>{closeModal();openHelp();}}),
   editorSettingsBox(),
   el('div',{class:'fld'},el('span',{text:'Экспорт книги'}),el('div',{class:'export-row'},el('button',{class:'btn ghost',type:'button',text:'Word (.docx)',onclick:()=>{closeModal();exportDocx();}}),el('button',{class:'btn ghost',type:'button',text:'EPUB',onclick:()=>{closeModal();exportEpub();}}),el('button',{class:'btn ghost',type:'button',text:'PDF',onclick:()=>{closeModal();openPreview();}})),el('div',{class:'fine',text:'Word подойдёт для редактора и издательства, EPUB для электронных читалок. Заметки на полях в файлы не попадают.'})),
   el('div',{class:'fld'},el('span',{text:'Резервная копия'}),el('div',{class:'fine',text:backupLine()}),
@@ -1078,7 +1095,7 @@ function editing(){const a=document.activeElement;return !!a&&(a===prose||prose.
 function placeBar(){
  const vv=window.visualViewport;if(!vv)return;
  const kb=(window.innerHeight-vv.height)>120&&editing();
- if(kb!==kbOpen){kbOpen=kb;document.body.classList.toggle('kb',kb);bar.classList.toggle('kb',kb);}
+ if(kb!==kbOpen){kbOpen=kb;document.body.classList.toggle('kb',kb);bar.classList.toggle('kb',kb);if(typeof topEl!=='undefined')topEl.classList.toggle('hid',kb&&window.scrollY>60);}
  if(kb){bar.style.top=Math.max(0,Math.round(vv.offsetTop))+'px';bar.style.bottom='auto';}
  else{bar.style.top='';bar.style.bottom='';}
 }
@@ -1097,6 +1114,16 @@ function revealCaret(){
  const bottom=(vv?vv.offsetTop+vv.height:innerHeight)-(kbOpen?10:bar.offsetHeight+10);
  if(r.top<top||r.bottom>bottom){const target=top+(bottom-top)*0.45;window.scrollBy(0,Math.round(r.top-target));setTimeout(placeBar,50);}
 }
+// Header: hidden while the keyboard is open or while scrolling down through the text;
+// any upward swipe (keyboard closed) or reaching the top brings it back.
+const topEl=document.querySelector('.top');let lastY=window.scrollY;
+function updTop(){
+ const y=window.scrollY,dy=y-lastY;lastY=y;
+ if(kbOpen){topEl.classList.add('hid');return;}
+ if(y<60||dy<-6)topEl.classList.remove('hid');
+ else if(dy>6)topEl.classList.add('hid');
+}
+addEventListener('scroll',updTop,{passive:true});
 function onScrollMove(){
  if(!kbOpen){placeBar();return;}
  bar.classList.add('moving');clearTimeout(scrollT);
@@ -1546,6 +1573,25 @@ async function exportEpub(){
  }catch(e){setBusy(null);toast('Не получилось собрать EPUB: '+(e&&e.message||'ошибка'),5000);}
 }
 
+/* ---------- help ---------- */
+const HELP=[
+ ['Главы и части','<p>Нажмите <b>☰</b> слева вверху: откроется оглавление.</p><ul><li><b>+ Глава</b> и <b>+ Часть</b> добавляют главу или часть после текущей.</li><li><b>Порядок</b> показывает стрелки, чтобы переставлять главы, а также кнопки переименования и удаления.</li><li>Название главы можно править прямо на листе, крупный заголовок над текстом.</li><li>Цветная точка у главы показывает её статус, серая строка под названием это заметка к главе.</li></ul>'],
+ ['Как писать и оформлять','<p>Нижняя панель:</p><ul><li><kbd>↶</kbd> <kbd>↷</kbd> отменить и повторить.</li><li><kbd>¶</kbd> обычный абзац, <kbd>Заг</kbd> подзаголовок, <kbd>⁂</kbd> разрыв сцены.</li><li><kbd>Ж</kbd> жирный, <kbd>К</kbd> курсив. Кнопка горит, когда оформление включено.</li><li>Облачко ставит <b>заметку на полях</b>: выделите фразу и нажмите его. Заметка подсветится жёлтым, нажатие на неё открывает текст. В PDF, Word и EPUB заметки не попадают.</li><li>Картинка вставляет фото из галереи, подпись пишется под ним.</li><li><kbd>✓</kbd> прячет клавиатуру.</li></ul><p>Пока открыта клавиатура, панель стоит вверху экрана. Если вы ушли листанием далеко от курсора, любая кнопка панели вернёт к нему.</p><p>При наборе приложение само ставит <b>тире</b> («- » в начале абзаца и « - » между словами), <b>«ёлочки»</b> вместо прямых кавычек и <b>«…»</b> вместо трёх точек.</p>'],
+ ['Верхняя панель и поиск','<p>Верхняя панель прячется, когда вы листаете текст вниз или пишете, и появляется, если чуть потянуть текст вверх.</p><ul><li><b>Название вверху</b> открывает список всех книг.</li><li><b>Лупа</b> ищет пару слов по всей книге, «е» и «ё» считаются одинаковыми. Нажмите на результат, и откроется нужное место.</li><li><b>Заменить…</b> под строкой поиска меняет слово во всей книге, например имя героя. Перед заменой сохраняется версия каждой главы.</li><li><b>Рамка</b> включает режим без отвлечений, выход значком в правом верхнем углу.</li><li><b>Книжка</b> показывает вёрстку и сохраняет PDF.</li><li><b>⋯</b> открывает название, обложки, экспорт, копии и настройки.</li></ul>'],
+ ['Под текстом главы','<p>Пролистайте главу до конца:</p><ul><li>сколько слов в главе и сколько написано сегодня, <b>цель на день</b>;</li><li><b>статус</b>: черновик, правка или готово;</li><li><b>заметка к главе</b>: о чём она и что доделать, в книгу не попадает;</li><li><b>Версии</b>: состояние главы по дням, любую версию можно посмотреть и вернуть;</li><li><b>Разделить главу</b> в месте курсора и <b>Объединить со следующей</b>.</li></ul>'],
+ ['Герои и события','<p>В оглавлении есть вкладки <b>Герои</b> и <b>События</b>.</p><ul><li>Герой: фото, имя, возраст, внешность и характер.</li><li>Событие: название, описание, глава и участники. События идут в порядке глав.</li></ul>'],
+ ['Несколько книг и корзина','<ul><li>Нажмите название вверху или название книги в оглавлении: откроется <b>Все книги</b>. Там переключение между книгами и кнопка <b>Новая книга</b>.</li><li>Удалённые главы и книги 30 дней лежат в <b>корзине</b>: корзина глав внизу оглавления, корзина книг внизу списка «Все книги».</li></ul>'],
+ ['Где хранится текст и копии','<ul><li>Всё хранится <b>только на этом телефоне</b>, на сервер ничего не уходит. Работает и без интернета.</li><li>Приложение с иконки и сайт в Safari хранят книги <b>отдельно</b>. Пишите в одном месте.</li><li>Вверху рядом с номером главы видно <b>«сохранено»</b>.</li><li>Раз в неделю делайте <b>копию</b>: ⋯ → Сохранить копию, файл ляжет в «Файлы». Если копии давно не было, приложение напомнит.</li><li><b>Загрузить копию</b> добавляет книгу из файла в список, ничего не заменяя. Так книгу можно перенести на другой телефон.</li></ul>'],
+ ['PDF, Word и EPUB','<ul><li><b>Книжка</b> вверху показывает книгу по страницам 125 × 200 мм с обложками, содержанием и номерами страниц. Кнопка PDF сохраняет файл.</li><li>⋯ → <b>Word</b> для редактора или издательства, <b>EPUB</b> для электронных читалок.</li><li>Обложки и аннотация задаются в ⋯.</li></ul>'],
+ ['Внешний вид','<ul><li>⋯ → <b>Размер текста</b> в редакторе.</li><li>Тема: <b>светлая, ночная</b> или <b>как в телефоне</b>.</li><li><b>Режим без отвлечений</b> прячет всё, кроме текста.</li></ul>']
+];
+function openHelp(){
+ const box=el('div',{class:'help'});
+ HELP.forEach(([t,h],i)=>{const d=el('details',i===0?{open:true}:null,el('summary',{text:t}),el('div',{class:'hb',html:h}));box.append(d);});
+ closeDrawer();openModal('Как пользоваться',[box],[{label:'Понятно',primary:true,fn:closeModal}]);
+}
+$('#helpBtn').onclick=openHelp;
+
 $('#focusBtn').onclick=()=>toggleFocus(true);
 $('#focusExit').onclick=()=>toggleFocus(false);
 $('#replToggle').onclick=()=>{const b=$('#replBox');b.hidden=!b.hidden;if(!b.hidden)setTimeout(()=>$('#rq').focus(),50);};
@@ -1553,7 +1599,7 @@ $('#replGo').onclick=replaceAll;
 document.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&!e.altKey&&e.key.toLowerCase()==='z'&&document.activeElement===prose){e.preventDefault();e.shiftKey?redo():undo();}});
 if(getPref('focus','0')==='1'){document.body.classList.add('focus');document.documentElement.classList.add('focus');}
 
-load().then(async()=>{await purgeOldTrash();renderAll();renderFoot();setTimeout(maybeNudgeBackup,2500);});
+load().then(async()=>{await purgeOldTrash();renderAll();renderFoot();setTimeout(maybeNudgeBackup,2500);if(getPref('helpSeen','0')!=='1'){setPref('helpSeen','1');setTimeout(()=>nudge('Короткая инструкция по приложению всегда есть в ☰ и в меню ⋯.','Открыть',openHelp),1200);}});
 })();
 </script>
 
@@ -1561,7 +1607,7 @@ load().then(async()=>{await purgeOldTrash();renderAll();renderFoot();setTimeout(
 if('serviceWorker' in navigator&&location.protocol.startsWith('http')){
   navigator.serviceWorker.register('sw.js').catch(()=>{});
   navigator.serviceWorker.ready.then(async()=>{
-    try{const c=await caches.open('kniga-v8');if(!(await c.match('index.html')))return;
+    try{const c=await caches.open('kniga-v9');if(!(await c.match('index.html')))return;
       if(localStorage.getItem('kp:offline')==='2')return;localStorage.setItem('kp:offline','2');}catch(e){return;}
     const d=document.createElement('div');d.className='toast';d.setAttribute('role','status');
     d.textContent='Готово: теперь приложение открывается и без интернета';document.body.append(d);setTimeout(()=>d.remove(),4500);
