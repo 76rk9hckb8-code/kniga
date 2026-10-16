@@ -57,7 +57,18 @@ svg{display:block}
 .side.open{transform:none}
 .scrim{position:fixed;inset:0;z-index:45;background:rgba(25,30,36,.32);opacity:0;pointer-events:none;transition:opacity .25s}
 .scrim.on{opacity:1;pointer-events:auto}
-.side-head{padding:16px 16px 10px;border-bottom:1px solid var(--line)}
+.side-head{padding:16px 16px 10px;border-bottom:1px solid var(--line);display:block;width:100%;text-align:left}
+.side-head .all{display:inline-flex;align-items:center;gap:4px;margin-top:8px;font-size:12.5px;color:var(--accent);font-weight:600}
+.lib{display:flex;flex-direction:column;gap:8px}
+.lib-row{display:flex;align-items:center;gap:12px;padding:8px;border-radius:12px;border:1px solid var(--line);background:#fff}
+.lib-row.cur{border-color:var(--accent);background:var(--accent-soft)}
+.lib-go{flex:1;min-width:0;display:flex;align-items:center;gap:12px;text-align:left}
+.lib-cov{width:44px;aspect-ratio:125/200;flex:none;border-radius:2px;background:var(--accent) center/cover no-repeat;color:#F4F4EE;display:grid;place-items:center;font-family:var(--font-display);font-size:18px;font-weight:600;box-shadow:1px 2px 5px rgba(0,0,0,.18)}
+.lib-t{min-width:0}
+.lib-t b{display:block;font-family:var(--font-book);font-size:15.5px;font-weight:600;line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lib-t small{display:block;font-size:12.5px;color:var(--ink-2);margin-top:2px}
+.lib-del{width:36px;height:36px;display:grid;place-items:center;color:var(--ink-3);border-radius:10px;flex:none}
+.lib-del .ico{width:18px;height:18px}
 .book-name{font-family:var(--font-display);font-size:24px;font-weight:600;line-height:1.1;text-wrap:balance}
 .book-author{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);margin-top:4px}
 .tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;padding:8px 10px;border-bottom:1px solid var(--line)}
@@ -260,7 +271,7 @@ main{padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px
 
 <div class="scrim" id="scrim"></div>
 <aside class="side" id="side" aria-label="Боковая панель">
-  <div class="side-head"><div class="book-name" id="sideTitle"></div><div class="book-author" id="sideAuthor"></div></div>
+  <button class="side-head" id="sideHead" aria-label="Все книги"><div class="book-name" id="sideTitle"></div><div class="book-author" id="sideAuthor"></div><span class="all">Все книги ›</span></button>
   <div class="tabs" role="tablist">
     <button class="tab" role="tab" data-tab="toc" aria-selected="true">Главы</button>
     <button class="tab" role="tab" data-tab="find" aria-selected="false">Поиск</button>
@@ -386,7 +397,10 @@ let cur=null, editToc=false, tab='toc';
 const timers={};
 function later(key,fn,ms){clearTimeout(timers[key]);timers[key]=setTimeout(()=>{delete timers[key];fn();},ms);}
 function flushAll(){for(const k in timers){clearTimeout(timers[k]);delete timers[k];}saveMetaNow();if(cur)saveChNow(cur);}
-async function saveMetaNow(){const ok=await Store.set('meta',book);status(ok?'Сохранено':'Не удалось сохранить');}
+async function saveMetaNow(){if(!bookId)return;syncLib();const ok=await Store.set('meta:'+bookId,book);status(ok?'Сохранено':'Не удалось сохранить');}
+let lib=null,bookId=null;
+function syncLib(){if(!lib||!bookId)return;let e=lib.books.find(b=>b.id===bookId);if(!e){e={id:bookId};lib.books.push(e);}
+ e.title=book.title||'';e.author=book.author||'';e.words=chapters().reduce((s,c)=>s+(wc[c.id]||0),0);e.chapters=chapters().length;e.updated=new Date().toISOString();lib.current=bookId;Store.set('library',lib);}
 function saveMeta(){status('…');later('meta',saveMetaNow,500);}
 async function saveChNow(id){if(html[id]==null)return;const ok=await Store.set('ch:'+id,html[id]);status(ok?'Сохранено':'Не удалось сохранить');}
 function saveCh(id){status('…');later('ch:'+id,()=>saveChNow(id),600);}
@@ -433,22 +447,75 @@ function sampleBook(){
 /* ---------- load ---------- */
 async function load(){
  await Store.open();
- let meta=await Store.get('meta');
- if(!meta||!Array.isArray(meta.items)){const s=sampleBook();meta=s.meta;for(const id in s.h){html[id]=s.h[id];await Store.set('ch:'+id,s.h[id]);}await Store.set('meta',meta);}
- else{for(const it of meta.items)if(it.t==='ch'){html[it.id]=(await Store.get('ch:'+it.id))||'<p><br></p>';}}
- book=meta;book.characters=book.characters||[];book.events=book.events||[];
- for(const id in html)wc[id]=countWords(html[id]);
- let last=null;try{last=localStorage.getItem('kp:last')}catch(e){}
- const first=(last&&item(last)&&item(last).t==='ch')?last:(chapters()[0]||{}).id;
- renderAll();
- if(first)openChapter(first,{keepDrawer:true});else showEmpty();
+ lib=await Store.get('library');
+ if(!lib||!Array.isArray(lib.books)){
+  lib={books:[],current:null};
+  const old=await Store.get('meta');
+  if(old&&Array.isArray(old.items)){const id=uid();await Store.set('meta:'+id,old);await Store.del('meta');lib.books.push({id,title:old.title||'',author:old.author||''});lib.current=id;
+   try{const l=localStorage.getItem('kp:last');if(l)localStorage.setItem('kp:last:'+id,l);}catch(e){}}
+  else{const s=sampleBook();const id=uid();for(const cid in s.h)await Store.set('ch:'+cid,s.h[cid]);await Store.set('meta:'+id,s.meta);lib.books.push({id,title:s.meta.title,author:s.meta.author});lib.current=id;}
+  await Store.set('library',lib);
+ }
+ if(!lib.books.length){await createBook(false);}
+ await switchBook(lib.books.some(b=>b.id===lib.current)?lib.current:lib.books[0].id,true);
  if(Store.mode!=='idb')toast(Store.mode==='ls'?'Сохраняю в упрощённом хранилище браузера. Делайте копию книги в меню «⋯».':'Хранилище недоступно: изменения пропадут после закрытия. Сохраните копию книги в меню «⋯».',6000);
+}
+async function switchBook(id,initial){
+ if(!initial){flushAll();}
+ for(const k in html){delete html[k];delete wc[k];}
+ let meta=await Store.get('meta:'+id);
+ if(!meta||!Array.isArray(meta.items))meta={v:1,title:'Без названия',author:'',front:null,back:null,backText:'',items:[],characters:[],events:[]};
+ for(const it of meta.items)if(it.t==='ch'){html[it.id]=(await Store.get('ch:'+it.id))||'<p><br></p>';}
+ book=meta;book.characters=book.characters||[];book.events=book.events||[];bookId=id;
+ for(const cid in html)wc[cid]=countWords(html[cid]);
+ lib.current=id;Store.set('library',lib);
+ let last=null;try{last=localStorage.getItem('kp:last:'+id)}catch(e){}
+ const first=(last&&item(last)&&item(last).t==='ch')?last:(chapters()[0]||{}).id;
+ cur=null;editToc=false;renderAll();
+ if(first)openChapter(first,{keepDrawer:true});else showEmpty();
+}
+async function createBook(open){
+ const id=uid(),cid=uid();
+ const meta={v:1,sample:false,title:'Новая книга',author:'',front:null,back:null,backText:'',items:[{t:'ch',id:cid,title:''}],characters:[],events:[]};
+ await Store.set('ch:'+cid,'<p><br></p>');await Store.set('meta:'+id,meta);
+ lib.books.push({id,title:meta.title,author:'',words:0,chapters:1,updated:new Date().toISOString()});await Store.set('library',lib);
+ if(open){await switchBook(id);closeModal();bookSettings();toast('Новая книга создана. Остальные книги на месте, в списке «Все книги».',3500);setTimeout(()=>{const t=$('#bTitle');if(t){t.focus();t.select();}},120);}
+ return id;
+}
+async function deleteBook(id){
+ if(id===bookId){for(const k in timers){clearTimeout(timers[k]);delete timers[k];}}
+ const meta=await Store.get('meta:'+id);
+ if(meta&&Array.isArray(meta.items))for(const it of meta.items)if(it.t==='ch')await Store.del('ch:'+it.id);
+ await Store.del('meta:'+id);lib.books=lib.books.filter(b=>b.id!==id);try{localStorage.removeItem('kp:last:'+id)}catch(e){}
+ if(!lib.books.length)await createBook(false);
+ await Store.set('library',lib);
+ if(id===bookId){bookId=null;await switchBook(lib.books[0].id,true);}
+}
+async function openLibrary(){
+ flushAll();closeDrawer();
+ const box=el('div',{class:'lib'});
+ const sorted=[...lib.books].sort((a,b)=>(b.id===bookId)-(a.id===bookId)||(b.updated||'').localeCompare(a.updated||''));
+ for(const b of sorted){
+  const meta=b.id===bookId?book:await Store.get('meta:'+b.id);
+  const cov=el('div',{class:'lib-cov',text:meta&&meta.front?'':((b.title||'?').trim()[0]||'?').toUpperCase()});
+  if(meta&&meta.front)cov.style.backgroundImage='url("'+meta.front+'")';
+  const w=b.id===bookId?chapters().reduce((s,c)=>s+(wc[c.id]||0),0):(b.words||0);
+  const ch=b.id===bookId?chapters().length:(b.chapters||0);
+  const sub=[b.author,ch+' '+plural(ch,'глава','главы','глав'),w.toLocaleString('ru-RU')+' '+plural(w,'слово','слова','слов')].filter(Boolean).join(' · ');
+  box.append(el('div',{class:'lib-row'+(b.id===bookId?' cur':'')},
+   el('button',{class:'lib-go',onclick:async()=>{if(b.id===bookId){closeModal();return;}closeModal();await switchBook(b.id);toast('Открыта книга «'+(book.title||'Без названия')+'»');}},cov,el('div',{class:'lib-t'},el('b',{text:(b.title||'Без названия')+(b.id===bookId?'':'')}),el('small',{text:(b.id===bookId?'Открыта сейчас · ':'')+sub}))),
+   el('button',{class:'lib-del','aria-label':'Удалить книгу',html:ICON.del,onclick:async()=>{
+     if(!await confirmBox('Удалить книгу «'+(b.title||'Без названия')+'»?','Будут удалены все её главы, герои и события. Остальные книги не пострадают. Если книга может понадобиться, сначала сохраните её копию.','Удалить книгу'))return;
+     await deleteBook(b.id);closeModal();openLibrary();toast('Книга удалена');}})));
+ }
+ openModal('Все книги',[box,el('div',{class:'fine',text:'Каждая книга хранится отдельно, со своими главами, героями и событиями.'})],
+  [{label:'Загрузить копию',ghost:true,fn:()=>{const f=$('#fileJson');f.value='';f.click();}},{label:'Новая книга',primary:true,fn:()=>createBook(true)}]);
 }
 
 /* ---------- rendering: side ---------- */
 function renderAll(){renderHead();renderToc();renderChars();renderEvents();renderTotals();}
 function renderHead(){$('#sideTitle').textContent=book.title||'Без названия';$('#sideAuthor').textContent=book.author||'';}
-function renderTotals(){const w=chapters().reduce((s,c)=>s+(wc[c.id]||0),0);$('#totWords').textContent=w.toLocaleString('ru-RU');$('#totPages').textContent='≈'+Math.max(1,Math.ceil(w/250));}
+function renderTotals(){const w=chapters().reduce((s,c)=>s+(wc[c.id]||0),0);if(lib){const e=lib.books.find(b=>b.id===bookId);if(e&&(e.words!==w||e.chapters!==chapters().length)){e.words=w;e.chapters=chapters().length;Store.set('library',lib);}}$('#totWords').textContent=w.toLocaleString('ru-RU');$('#totPages').textContent='≈'+Math.max(1,Math.ceil(w/250));}
 function renderToc(){
  const box=$('#toc');box.textContent='';
  $('#editToc').classList.toggle('on',editToc);
@@ -468,7 +535,7 @@ function renderToc(){
   }
  });
  const note=$('#sampleNote');note.textContent='';
- if(book.sample)note.append(el('div',{class:'note'},'Это пример книги, чтобы было видно, как всё выглядит. Начать свою можно в меню ',el('b',{text:'⋯ → Новая книга'}),', или просто перепишите этот текст.'));
+ if(book.sample)note.append(el('div',{class:'note'},'Это пример книги, чтобы было видно, как всё выглядит. Свою книгу можно начать, нажав на название вверху и выбрав ',el('b',{text:'Новая книга'}),'. Пример можно удалить там же.'));
 }
 function move(idx,d){const j=idx+d;if(j<0||j>=book.items.length)return;const a=book.items;[a[idx],a[j]]=[a[j],a[idx]];book.sample=false;saveMeta();renderToc();renderEvents();if(cur)renderChapterHead();}
 function rename(it){
@@ -593,7 +660,7 @@ function openChapter(id,opt={}){
  $('#sheet').hidden=false;$('#empty').hidden=true;$('#bar').hidden=false;
  titleEl.textContent=it.title||'';prose.innerHTML=html[id]||'<p><br></p>';ensureBlocks();
  renderChapterHead();renderToc();
- try{localStorage.setItem('kp:last',id)}catch(e){}
+ try{localStorage.setItem('kp:last:'+bookId,id)}catch(e){}
  if(!opt.keepDrawer)closeDrawer();
  if(opt.find)requestAnimationFrame(()=>highlightOcc(opt.find.q,opt.find.occ));
  else window.scrollTo(0,0);
@@ -729,6 +796,8 @@ function toast(t,ms){document.querySelectorAll('.toast').forEach(x=>x.remove());
 
 /* ---------- book settings: title, covers, backup ---------- */
 $('#bookBtn').onclick=bookSettings;
+$('#sideHead').onclick=openLibrary;
+$('.top-title').addEventListener('click',openLibrary);$('.top-title').style.cursor='pointer';
 function bookSettings(){
  const d={title:book.title||'',author:book.author||'',front:book.front,back:book.back,backText:book.backText||''};
  const ti=el('input',{id:'bTitle',type:'text',value:d.title,placeholder:'Название книги'});
@@ -749,15 +818,8 @@ function bookSettings(){
    el('div',{style:'display:flex;gap:8px;flex-wrap:wrap'},
     el('button',{class:'btn ghost',type:'button',text:'Сохранить копию',onclick:exportJson}),
     el('button',{class:'btn ghost',type:'button',text:'Загрузить копию',onclick:()=>{const f=$('#fileJson');f.value='';f.click();}}))),
-  el('button',{class:'link red',type:'button',style:'align-self:flex-start',text:'Новая книга',onclick:newBook})
+  el('button',{class:'btn ghost',type:'button',style:'align-self:flex-start',text:'Все книги и новая книга',onclick:()=>{closeModal();openLibrary();}})
  ],[{label:'Сохранить',primary:true,fn:()=>{book.title=ti.value.trim();book.author=au.value.trim();book.front=d.front;book.back=d.back;book.backText=bt.value;book.sample=false;saveMeta();renderAll();if(cur)renderChapterHead();else showEmpty();closeModal();toast('Сохранено');}}]);
-}
-async function newBook(){
- if(!await confirmBox('Начать новую книгу?','Текущая книга, её персонажи и события будут удалены с устройства. Если она нужна, сначала сохраните копию.','Начать новую'))return;
- await Store.clear();for(const k in html){delete html[k];delete wc[k];}
- const id=uid();book={v:1,sample:false,title:'Новая книга',author:'',front:null,back:null,backText:'',items:[{t:'ch',id,title:''}],characters:[],events:[]};
- html[id]='<p><br></p>';wc[id]=0;await Store.set('ch:'+id,html[id]);await Store.set('meta',book);
- cur=null;renderAll();openChapter(id,{keepDrawer:true});closeModal();setTimeout(()=>titleEl.focus(),80);
 }
 function fullBook(){if(cur)html[cur]=prose.innerHTML;return{app:'kniga-pisatelya',v:1,savedAt:new Date().toISOString(),meta:book,chapters:html};}
 function safeName(s){return (s||'Книга').replace(/[\\/:*?"<>|]+/g,' ').replace(/\s+/g,' ').trim().slice(0,80)||'Книга';}
@@ -768,11 +830,13 @@ async function exportJson(){
 $('#fileJson').addEventListener('change',async e=>{
  const f=e.target.files[0];if(!f)return;
  try{const data=JSON.parse(await f.text());if(data.app!=='kniga-pisatelya'||!data.meta||!Array.isArray(data.meta.items))throw 0;
-  if(!await confirmBox('Загрузить копию «'+(data.meta.title||'')+'»?','Книга на устройстве будет заменена содержимым копии.','Загрузить'))return;
-  await Store.clear();for(const k in html){delete html[k];delete wc[k];}
-  book=data.meta;book.characters=book.characters||[];book.events=book.events||[];
-  for(const it of book.items)if(it.t==='ch'){html[it.id]=data.chapters[it.id]||'<p><br></p>';wc[it.id]=countWords(html[it.id]);await Store.set('ch:'+it.id,html[it.id]);}
-  await Store.set('meta',book);cur=null;renderAll();const c=chapters()[0];if(c)openChapter(c.id,{keepDrawer:true});else showEmpty();closeModal();toast('Копия загружена');
+  const exists=lib.books.some(b=>(b.title||'')===(data.meta.title||''));
+  if(!await confirmBox('Добавить книгу «'+(data.meta.title||'Без названия')+'»?',(exists?'Книга с таким названием уже есть. Копия будет добавлена отдельной книгой, ничего не заменится.':'Она появится в списке «Все книги» рядом с остальными.'),'Добавить'))return;
+  const m=data.meta;const map={};
+  for(const it of m.items){const nid=uid();map[it.id]=nid;if(it.t==='ch')await Store.set('ch:'+nid,(data.chapters||{})[it.id]||'<p><br></p>');it.id=nid;}
+  (m.events||[]).forEach(ev=>{if(ev.chapterId)ev.chapterId=map[ev.chapterId]||null;});
+  const id=uid();await Store.set('meta:'+id,m);lib.books.push({id,title:m.title||'',author:m.author||'',updated:new Date().toISOString()});await Store.set('library',lib);
+  closeModal();await switchBook(id);toast('Книга добавлена из копии');
  }catch(err){toast('Это не файл копии книги. Выберите файл .json, сохранённый из этого приложения.',4000);}
 });
 
@@ -938,7 +1002,7 @@ load();
 if('serviceWorker' in navigator&&location.protocol.startsWith('http')){
   navigator.serviceWorker.register('sw.js').catch(()=>{});
   navigator.serviceWorker.ready.then(async()=>{
-    try{const c=await caches.open('kniga-v3');if(!(await c.match('index.html')))return;
+    try{const c=await caches.open('kniga-v4');if(!(await c.match('index.html')))return;
       if(localStorage.getItem('kp:offline')==='2')return;localStorage.setItem('kp:offline','2');}catch(e){return;}
     const d=document.createElement('div');d.className='toast';d.setAttribute('role','status');
     d.textContent='Готово: теперь приложение открывается и без интернета';document.body.append(d);setTimeout(()=>d.remove(),4500);
