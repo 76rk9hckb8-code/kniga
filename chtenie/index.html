@@ -1,0 +1,668 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Моя полка</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Полка">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#E8EBE5">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Prata&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&display=swap">
+<style>
+/* Layout: a wall with walnut shelves — covers stand on planks in a grid; book details slide up as a sheet; three sections in a bottom bar. Single light look by choice. */
+:root{
+  --wall:#E8EBE5; --wall-2:#DADFD8; --card:#FAFBF8; --ink:#1F2421; --ink-2:#59605B; --ink-3:#8C938E; --line:#D3D8D1;
+  --wood:#80593A; --wood-2:#5C3F28; --wood-3:#A27A55;
+  --accent:#2F5D50; --accent-soft:#DCE8E2; --gold:#C38F22;
+  --st-reading:#2F5D50; --st-want:#4A6788; --st-done:#477A43; --st-dropped:#9A4C3F;
+  --f-display:'Prata','Literata',Georgia,serif;
+  --f-book:'Literata',Georgia,'Times New Roman',serif;
+  --f-ui:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+  --tab-h:58px;
+  color-scheme:light;
+  padding-top:env(safe-area-inset-top,0px);
+}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{margin:0;background:var(--wall);color:var(--ink);font:15px/1.4 var(--f-ui);-webkit-tap-highlight-color:transparent;overscroll-behavior-y:none}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:40;background:var(--wall)}
+img{max-width:100%}[hidden]{display:none!important}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.ico{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;display:block}
+.wrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+/* header */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;background:var(--wall)}
+.top-in{display:flex;align-items:center;gap:10px;padding-block:10px 8px;max-width:900px;margin:0 auto}
+.top h1{flex:1;margin:0;font-family:var(--f-display);font-weight:400;font-size:27px;line-height:1.1}
+.round{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:#fff;flex:none;box-shadow:0 3px 10px rgba(47,93,80,.3)}
+.round .ico{width:22px;height:22px}
+.seg{display:flex;gap:6px;overflow-x:auto;padding-block:2px 10px;max-width:900px;margin:0 auto;scrollbar-width:none}
+.seg::-webkit-scrollbar{display:none}
+.seg button{flex:none;padding:7px 13px;border-radius:999px;border:1px solid var(--line);font-size:14px;color:var(--ink-2);background:var(--card);white-space:nowrap}
+.seg button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+.seg b{font-weight:600;font-variant-numeric:tabular-nums;margin-left:4px;opacity:.7}
+
+main{padding-block:6px calc(var(--tab-h) + 30px + env(safe-area-inset-bottom,0px));max-width:900px;margin:0 auto}
+
+/* shelf */
+.shelf{display:flex;flex-direction:column;gap:30px;padding-top:12px}
+.srow{position:relative}
+.srow-books{display:grid;gap:14px;align-items:end;padding:0 6px}
+.plank{height:14px;margin-top:-2px;border-radius:2px;background:linear-gradient(var(--wood-3),var(--wood) 35%,var(--wood-2));box-shadow:0 8px 12px -6px rgba(60,40,20,.45)}
+.bk{display:flex;flex-direction:column;align-items:stretch;text-align:left;min-width:0}
+.cov{position:relative;width:100%;aspect-ratio:2/3;border-radius:2px 4px 4px 2px;overflow:hidden;background:#9aa;box-shadow:2px 3px 7px rgba(30,25,20,.28),inset 3px 0 0 rgba(255,255,255,.18),inset 4px 0 0 rgba(0,0,0,.12);background-size:cover;background-position:center}
+.cov .ph{position:absolute;inset:0;padding:12% 10% 10% 14%;display:flex;flex-direction:column;justify-content:space-between;color:#F6F4EE}
+.cov .ph b{font-family:var(--f-display);font-weight:400;font-size:clamp(12px,3.6vw,16px);line-height:1.15;overflow:hidden;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow-wrap:anywhere}
+.cov .ph small{font-size:clamp(9px,2.6vw,11px);opacity:.85;letter-spacing:.04em;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.cov .rib{position:absolute;right:6px;top:0;padding:5px 5px 7px;background:var(--gold);color:#fff;font-size:10px;font-weight:700;clip-path:polygon(0 0,100% 0,100% 100%,50% 80%,0 100%)}
+.bk .pbar{height:4px;background:rgba(0,0,0,.08);border-radius:2px;margin-top:6px;overflow:hidden}
+.bk .pbar i{display:block;height:100%;background:var(--accent);border-radius:2px}
+.bk .pl{font-size:11px;color:var(--ink-2);margin-top:3px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.empty{text-align:center;padding:12vh 20px 0;color:var(--ink-2);font-family:var(--f-book);font-size:17px;line-height:1.5}
+.empty .btn{margin-top:16px}
+
+/* bottom tabs */
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:35;background:rgba(250,251,248,.95);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+.tabs-in{display:grid;grid-template-columns:repeat(3,1fr);height:var(--tab-h);max-width:520px;margin:0 auto}
+.tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:11px;color:var(--ink-3)}
+.tab[aria-selected="true"]{color:var(--accent);font-weight:600}
+
+/* cards / generic */
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+.h2{font-family:var(--f-display);font-weight:400;font-size:21px;margin:0 0 10px}
+.lab{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:11px 16px;border-radius:12px;background:var(--accent);color:#fff;font-weight:600;font-size:15px}
+.btn.ghost{background:var(--wall-2);color:var(--ink)}
+.btn.small{padding:7px 12px;font-size:14px;border-radius:10px}
+.btn.danger{background:transparent;color:var(--st-dropped);padding-inline:4px}
+.btn .ico{width:18px;height:18px}
+.muted{color:var(--ink-3);font-size:13.5px;line-height:1.45}
+.stack{display:flex;flex-direction:column;gap:14px}
+
+/* diary */
+.day{margin-top:18px}
+.day:first-child{margin-top:8px}
+.day > .lab{margin:0 4px 8px;display:block}
+.ent{display:flex;gap:12px;align-items:center;width:100%;text-align:left;padding:10px;background:var(--card);border:1px solid var(--line);border-radius:12px;margin-bottom:6px}
+.ent .cov{width:38px;flex:none;border-radius:2px}
+.ent .cov .ph{display:none}
+.ent-b{min-width:0;flex:1}
+.ent-b b{display:block;font-family:var(--f-book);font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ent-b span{display:block;font-size:13px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.ent .plus{font-weight:600;color:var(--accent);font-variant-numeric:tabular-nums;font-size:14px;white-space:nowrap}
+.ent.fin .plus{color:var(--st-done)}
+
+/* stats */
+.stats{display:flex;flex-direction:column;gap:12px;padding-top:8px}
+.goal-top{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.goal-top .big{font-family:var(--f-display);font-size:40px;line-height:1}
+.goal-top .of{color:var(--ink-2)}
+.goal-bar{height:10px;border-radius:5px;background:var(--wall-2);margin:12px 0 8px;overflow:hidden;position:relative}
+.goal-bar i{position:absolute;inset:0 auto 0 0;background:var(--accent);border-radius:5px}
+.goal-bar u{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--ink);opacity:.5}
+.goal-row{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
+.tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.tile b{display:block;font-family:var(--f-display);font-weight:400;font-size:26px;line-height:1.1;font-variant-numeric:tabular-nums}
+.tile span{font-size:12.5px;color:var(--ink-2)}
+.heat-wrap{overflow-x:auto;margin:0 -4px;padding:0 4px}
+.heat{display:grid;grid-auto-flow:column;grid-template-rows:repeat(7,13px);gap:3px;width:max-content}
+.heat i{width:13px;height:13px;border-radius:3px;background:var(--wall-2)}
+.heat i.l1{background:#B9D2C6}.heat i.l2{background:#7FAE98}.heat i.l3{background:#4B826C}.heat i.l4{background:#2F5D50}
+.heat i.fut{background:transparent}
+.heat i.today{outline:1.5px solid var(--ink);outline-offset:0}
+.heat-legend{display:flex;gap:4px;align-items:center;justify-content:flex-end;margin-top:8px;font-size:11px;color:var(--ink-3)}
+.heat-legend i{width:11px;height:11px;border-radius:3px;display:inline-block}
+.months{display:grid;grid-auto-flow:column;gap:3px;font-size:10.5px;color:var(--ink-3);margin-bottom:4px;width:max-content}
+.months span{width:13px;white-space:nowrap;overflow:visible}
+.bars svg{width:100%;height:auto;display:block}
+.bars text{font:10.5px var(--f-ui);fill:var(--ink-3)}
+.mini-covers{display:grid;grid-template-columns:repeat(auto-fill,minmax(54px,1fr));gap:8px}
+.mini-covers .cov .ph{padding:6px}.mini-covers .cov .ph b{font-size:9px}.mini-covers .cov .ph small{display:none}
+
+/* sheet */
+.sheet{position:fixed;inset:0;z-index:60;background:var(--wall);overflow-y:auto;-webkit-overflow-scrolling:touch;transform:translateY(100%);transition:transform .28s ease;padding-top:env(safe-area-inset-top,0px)}
+.sheet:not(.open){visibility:hidden;transition:transform .28s ease,visibility 0s .28s}
+.sheet.open{transform:none}
+.sh-top{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:6px;padding-block:8px;background:var(--wall)}
+.sh-top .sp{flex:1}
+.ibtn{width:42px;height:42px;display:grid;place-items:center;border-radius:12px;color:var(--ink)}
+.ibtn:active{background:var(--wall-2)}
+.sh-body{max-width:640px;margin:0 auto;padding-bottom:calc(40px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:14px}
+.hero{display:flex;gap:16px;align-items:flex-end}
+.hero .cov{width:min(36%,150px);flex:none}
+.hero-t{min-width:0;flex:1;padding-bottom:4px}
+.hero-t h2{margin:0;font-family:var(--f-display);font-weight:400;font-size:clamp(22px,6vw,30px);line-height:1.12;text-wrap:balance;overflow-wrap:anywhere}
+.hero-t p{margin:6px 0 0;color:var(--ink-2);font-family:var(--f-book)}
+.hero-t .dates{font-size:12.5px;color:var(--ink-3);margin-top:8px;font-family:var(--f-ui)}
+.chips{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.chips button{padding:9px 2px;border-radius:10px;border:1px solid var(--line);background:var(--card);font-size:13px;color:var(--ink-2)}
+.chips button[aria-pressed="true"]{color:#fff;border-color:transparent}
+.chips button[data-st="reading"][aria-pressed="true"]{background:var(--st-reading)}
+.chips button[data-st="want"][aria-pressed="true"]{background:var(--st-want)}
+.chips button[data-st="done"][aria-pressed="true"]{background:var(--st-done)}
+.chips button[data-st="dropped"][aria-pressed="true"]{background:var(--st-dropped)}
+.prog-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.prog-head .pct{font-family:var(--f-display);font-size:34px;line-height:1;font-variant-numeric:tabular-nums}
+.prog-head .of{font-size:13.5px;color:var(--ink-2);text-align:right;font-variant-numeric:tabular-nums}
+.pbig{height:10px;border-radius:5px;background:var(--wall-2);margin:12px 0 14px;overflow:hidden}
+.pbig i{display:block;height:100%;background:var(--accent);border-radius:5px;transition:width .3s}
+.upd{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.upd label{font-size:14px;color:var(--ink-2)}
+.num{width:84px;font:inherit;font-size:18px;font-variant-numeric:tabular-nums;padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--ink);text-align:center}
+.num.sm{width:60px}
+.quick{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.quick button{padding:7px 12px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-weight:600;font-size:14px;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.stars{display:flex;gap:4px}
+.stars button{width:38px;height:38px;display:grid;place-items:center;color:var(--line)}
+.stars button.on{color:var(--gold)}
+.stars svg{width:28px;height:28px;fill:currentColor}
+.fld{display:flex;flex-direction:column;gap:6px}
+.fld > span{font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.fld input,.fld textarea,.fld select{font:inherit;font-size:16px;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--ink);width:100%}
+.fld textarea{min-height:90px;resize:vertical;font-family:var(--f-book);line-height:1.5}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.quote{border-left:3px solid var(--accent);padding:4px 0 4px 12px;font-family:var(--f-book);font-style:italic;line-height:1.5;position:relative}
+.quote small{display:block;font-style:normal;font-family:var(--f-ui);font-size:12px;color:var(--ink-3);margin-top:3px}
+.quote .x{position:absolute;right:-6px;top:-4px;width:30px;height:30px;display:grid;place-items:center;color:var(--ink-3)}
+.quote .x .ico{width:16px;height:16px}
+.hist{display:flex;flex-direction:column;gap:2px}
+.hist div{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;padding:6px 0;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+.hist div:last-child{border-bottom:0}
+.hist span:first-child{color:var(--ink-3)}
+.pick{display:flex;gap:14px;align-items:center}
+.pick .cov{width:86px;flex:none}
+.pick .acts{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.link{color:var(--accent);font-weight:600;font-size:14px}
+.link.red{color:var(--st-dropped)}
+.typeseg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.typeseg button{padding:9px 2px;border-radius:10px;border:1px solid var(--line);background:#fff;font-size:13px;color:var(--ink-2)}
+.typeseg button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:600}
+.done-cta{display:flex;align-items:center;gap:10px;justify-content:space-between;background:var(--accent-soft);border-radius:12px;padding:10px 12px;margin-top:12px;font-size:14px;color:var(--accent)}
+
+/* modal */
+.modal{position:fixed;inset:0;z-index:80;display:flex;align-items:flex-end;justify-content:center;background:rgba(25,30,28,.36)}
+.dlg{background:var(--card);width:100%;max-width:480px;border-radius:18px 18px 0 0;padding:18px 18px calc(16px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:14px;max-height:90%;overflow:auto}
+@media (min-width:700px){.modal{align-items:center}.dlg{border-radius:18px;padding-bottom:16px}}
+.dlg h3{margin:0;font-family:var(--f-display);font-weight:400;font-size:22px}
+.dlg .acts{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--tab-h) + 18px + env(safe-area-inset-bottom,0px));z-index:95;background:var(--ink);color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;max-width:calc(100% - 40px);box-shadow:0 6px 20px rgba(0,0,0,.2);text-align:center}
+@media (prefers-reduced-motion:reduce){.sheet{transition:none}}
+</style>
+</head>
+<body>
+<header class="top wrap">
+  <div class="top-in">
+    <h1 id="title">Моя полка</h1>
+    <button class="round" id="addBtn" aria-label="Добавить книгу"><svg class="ico" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+  </div>
+  <div class="seg" id="seg" role="group" aria-label="Полки">
+    <button data-st="reading" aria-pressed="true">Читаю<b></b></button>
+    <button data-st="want" aria-pressed="false">Хочу прочитать<b></b></button>
+    <button data-st="done" aria-pressed="false">Прочитано<b></b></button>
+    <button data-st="dropped" aria-pressed="false">Брошено<b></b></button>
+  </div>
+</header>
+
+<main class="wrap">
+  <section id="v-shelf"></section>
+  <section id="v-diary" hidden></section>
+  <section id="v-stats" hidden></section>
+</main>
+
+<nav class="tabs" aria-label="Разделы"><div class="tabs-in">
+  <button class="tab" data-v="shelf" aria-selected="true"><svg class="ico" viewBox="0 0 24 24"><path d="M4 20h16M6 20V6h3v14M10 20V4h3v16M14.5 20l-.5-13 3-.4L18 20"/></svg>Полка</button>
+  <button class="tab" data-v="diary" aria-selected="false"><svg class="ico" viewBox="0 0 24 24"><rect x="5" y="3.5" width="14" height="17" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>Дневник</button>
+  <button class="tab" data-v="stats" aria-selected="false"><svg class="ico" viewBox="0 0 24 24"><path d="M5 20V12M10 20V6M15 20v-9M20 20V9"/></svg>Статистика</button>
+</div></nav>
+
+<section class="sheet" id="sheet" aria-modal="true" role="dialog">
+  <div class="sh-top wrap">
+    <button class="ibtn" id="shClose" aria-label="Назад"><svg class="ico" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>
+    <span class="sp"></span>
+    <span id="shActs"></span>
+  </div>
+  <div class="sh-body wrap" id="shBody"></div>
+</section>
+
+<input type="file" id="fileImg" accept="image/*" hidden>
+<input type="file" id="fileJson" accept=".json,application/json" hidden>
+
+<script>
+(function(){
+'use strict';
+const $=(s,r=document)=>r.querySelector(s);
+const uid=()=>Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-4);
+function el(tag,attrs,...kids){const e=document.createElement(tag);if(attrs)for(const k in attrs){const v=attrs[k];if(v==null||v===false)continue;if(k==='class')e.className=v;else if(k==='html')e.innerHTML=v;else if(k==='text')e.textContent=v;else if(k.startsWith('on'))e.addEventListener(k.slice(2),v);else e.setAttribute(k,v===true?'':v);}for(const c of kids.flat()){if(c==null||c===false)continue;e.append(c.nodeType?c:document.createTextNode(c));}return e;}
+const I={
+ x:'<svg class="ico" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>',
+ edit:'<svg class="ico" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16v4Z"/></svg>',
+ plus:'<svg class="ico" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',
+ star:'<svg viewBox="0 0 24 24"><path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17.1l-5.7 3.2 1.2-6.4-4.7-4.4 6.4-.8Z"/></svg>'
+};
+const ST={reading:'Читаю',want:'Хочу прочитать',done:'Прочитано',dropped:'Брошено'};
+const STS={reading:'Читаю',want:'Хочу',done:'Прочитано',dropped:'Брошено'};
+const TYPES={pages:'Страницы',percent:'Проценты',chapters:'Главы',audio:'Аудио'};
+const MONTHS=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+const MSHORT=['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+function plural(n,a,b,c){n=Math.abs(n)%100;const n1=n%10;if(n>10&&n<20)return c;if(n1>1&&n1<5)return b;if(n1===1)return a;return c;}
+
+/* ---------- dates (local) ---------- */
+const pad=n=>String(n).padStart(2,'0');
+const ymd=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const today=()=>ymd(new Date());
+const parseD=s=>{const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d,12);};
+const addDays=(s,n)=>{const d=parseD(s);d.setDate(d.getDate()+n);return ymd(d);};
+function human(s){const t=today();if(s===t)return'Сегодня';if(s===addDays(t,-1))return'Вчера';const d=parseD(s);return d.getDate()+' '+MONTHS[d.getMonth()]+(d.getFullYear()!==new Date().getFullYear()?' '+d.getFullYear():'');}
+const shortD=s=>{if(!s)return'';const d=parseD(s);return d.getDate()+' '+MONTHS[d.getMonth()]+' '+d.getFullYear();};
+
+/* ---------- storage on device ---------- */
+const Store={db:null,mode:'idb',mem:{},
+ async open(){try{this.db=await new Promise((res,rej)=>{const r=indexedDB.open('moya-polka',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);setTimeout(()=>rej('t'),4000);});}catch(e){this.mode='mem';}
+  try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist();}catch(e){}},
+ tx(m){return this.db.transaction('kv',m).objectStore('kv');},
+ get(k){if(this.mode!=='idb')return Promise.resolve(this.mem[k]);return new Promise(res=>{try{const r=this.tx('readonly').get(k);r.onsuccess=()=>res(r.result);r.onerror=()=>res(undefined);}catch(e){res(undefined)}});},
+ set(k,v){if(this.mode!=='idb'){this.mem[k]=v;return Promise.resolve(true);}return new Promise(res=>{try{const r=this.tx('readwrite').put(v,k);r.onsuccess=()=>res(true);r.onerror=()=>res(false);}catch(e){res(false)}});},
+ del(k){if(this.mode!=='idb'){delete this.mem[k];return Promise.resolve();}return new Promise(res=>{try{const r=this.tx('readwrite').delete(k);r.onsuccess=r.onerror=()=>res();}catch(e){res()}});},
+ clear(){if(this.mode!=='idb'){this.mem={};return Promise.resolve();}return new Promise(res=>{try{const r=this.tx('readwrite').clear();r.onsuccess=r.onerror=()=>res();}catch(e){res()}});}
+};
+let S=null;            // {books:[], sessions:[], goal:{}}
+const covers={};       // book id -> dataURL
+let saveT=null;
+function save(){clearTimeout(saveT);saveT=setTimeout(async()=>{const ok=await Store.set('state',S);if(!ok)toast('Не удалось сохранить на устройстве');},250);}
+function flush(){if(saveT){clearTimeout(saveT);saveT=null;Store.set('state',S);}}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')flush();});
+addEventListener('pagehide',flush);
+
+/* ---------- book helpers ---------- */
+const book=id=>S.books.find(b=>b.id===id);
+function total(b){return b.type==='percent'?100:(+b.total||0);}
+function frac(b){if(b.status==='done')return 1;const t=total(b);if(!t)return 0;return Math.max(0,Math.min(1,(+b.cur||0)/t));}
+function hm(min){min=Math.round(min||0);const h=Math.floor(min/60),m=min%60;return h?(h+' ч'+(m?' '+m+' мин':'')):(m+' мин');}
+function fmtVal(b,v){v=+v||0;switch(b.type){case'pages':return'стр. '+v;case'percent':return v+'%';case'chapters':return'гл. '+v;case'audio':return hm(v);}return String(v);}
+function fmtDelta(type,d){switch(type){case'pages':return'+'+d+' стр.';case'percent':return'+'+d+'%';case'chapters':return'+'+d+' гл.';case'audio':return'+'+hm(d);}return'+'+d;}
+function progLabel(b){
+ if(b.status==='done')return'Прочитано'+(b.rating?' · '+'★'.repeat(b.rating):'');
+ if(b.status==='want')return TYPES[b.type]==='Аудио'?'Аудиокнига'+(b.total?' · '+hm(b.total):''):(b.type==='pages'&&b.total?b.total+' стр.':'');
+ const t=total(b);if(!t)return fmtVal(b,b.cur);
+ if(b.type==='percent')return(+b.cur||0)+'%';
+ if(b.type==='audio')return hm(b.cur)+' из '+hm(t);
+ return Math.round(frac(b)*100)+'% · '+(b.type==='pages'?'стр. ':'гл. ')+(+b.cur||0)+' из '+t;
+}
+const PAL=['#3E5A4E','#5B4B6B','#7A4A3A','#3E5470','#6B5B3A','#2F5F66','#704055','#4F5E3A','#5A4A40','#3B4A63'];
+function hashC(s){let h=2166136261;for(const ch of s||''){h^=ch.charCodeAt(0);h=Math.imul(h,16777619);}return PAL[(h>>>0)%PAL.length];}
+function coverEl(b,extra){
+ const c=el('div',{class:'cov'});const src=covers[b.id];
+ if(src)c.style.backgroundImage='url("'+src+'")';
+ else{c.style.backgroundColor=hashC(b.title+b.author);c.append(el('div',{class:'ph'},el('b',{text:b.title||'Без названия'}),el('small',{text:b.author||''})));}
+ if(extra&&b.status==='done'&&b.rating>=5)c.append(el('span',{class:'rib',text:'★'}));
+ return c;
+}
+
+/* ---------- views ---------- */
+let view='shelf',shelf='reading';
+function setView(v){view=v;document.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected',t.dataset.v===v));
+ ['shelf','diary','stats'].forEach(x=>$('#v-'+x).hidden=x!==v);
+ $('#seg').hidden=v!=='shelf';$('#title').textContent=v==='shelf'?'Моя полка':v==='diary'?'Дневник':'Статистика';
+ render();window.scrollTo(0,0);}
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>setView(t.dataset.v));
+$('#seg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;shelf=b.dataset.st;try{localStorage.setItem('rd:shelf',shelf)}catch(_){}renderSeg();renderShelf();});
+$('#addBtn').onclick=()=>editBook(null);
+function render(){renderSeg();if(view==='shelf')renderShelf();else if(view==='diary')renderDiary();else renderStats();}
+function renderSeg(){document.querySelectorAll('#seg button').forEach(b=>{b.setAttribute('aria-pressed',b.dataset.st===shelf);const n=S.books.filter(x=>x.status===b.dataset.st).length;b.querySelector('b').textContent=n||'';});}
+
+function cols(){const w=Math.min(900,document.documentElement.clientWidth)-32;return Math.max(3,Math.min(6,Math.floor(w/122)));}
+function sortBooks(list){
+ if(shelf==='reading')return list.sort((a,b)=>(b.touched||'').localeCompare(a.touched||''));
+ if(shelf==='done')return list.sort((a,b)=>(b.finished||'').localeCompare(a.finished||''));
+ return list.sort((a,b)=>(b.added||'').localeCompare(a.added||''));
+}
+function renderShelf(){
+ const box=$('#v-shelf');box.textContent='';
+ const list=sortBooks(S.books.filter(b=>b.status===shelf));
+ if(!list.length){
+  const msg={reading:'Сейчас на этой полке пусто. Добавьте книгу, которую читаете, и отмечайте, докуда дошли.',want:'Сюда складывайте книги, которые хотите прочитать.',done:'Здесь будут прочитанные книги с оценками и заметками.',dropped:'Книги, которые вы решили не дочитывать.'}[shelf];
+  box.append(el('div',{class:'empty'},msg,el('br'),el('button',{class:'btn',onclick:()=>editBook(null,shelf),html:I.plus+'Добавить книгу'})));return;
+ }
+ const n=cols();const wrap=el('div',{class:'shelf'});
+ for(let i=0;i<list.length;i+=n){
+  const row=el('div',{class:'srow-books',style:'grid-template-columns:repeat('+n+',minmax(0,1fr))'});
+  list.slice(i,i+n).forEach(b=>{
+   const bt=el('button',{class:'bk','aria-label':b.title,onclick:()=>openBook(b.id)},coverEl(b,true));
+   if(b.status==='reading'){bt.append(el('div',{class:'pbar'},el('i',{style:'width:'+Math.round(frac(b)*100)+'%'})));}
+   const pl=progLabel(b);if(pl)bt.append(el('div',{class:'pl',text:b.status==='reading'&&b.type!=='percent'&&total(b)?Math.round(frac(b)*100)+'%':pl}));
+   row.append(bt);
+  });
+  wrap.append(el('div',{class:'srow'},row,el('div',{class:'plank'})));
+ }
+ box.append(wrap);
+}
+addEventListener('resize',()=>{clearTimeout(window._rz);window._rz=setTimeout(()=>{if(view==='shelf')renderShelf();},150);});
+
+/* ---------- diary ---------- */
+function sessText(s){const b=book(s.bookId)||{type:s.type};
+ if(s.kind==='finish')return'Книга прочитана';
+ const fake={type:s.type};return fmtVal(fake,s.from)+' → '+fmtVal(fake,s.to);}
+function renderDiary(){
+ const box=$('#v-diary');box.textContent='';
+ const list=[...S.sessions].sort((a,b)=>(b.date+b.ts).localeCompare(a.date+a.ts));
+ if(!list.length){box.append(el('div',{class:'empty',text:'Здесь появятся записи о чтении. Откройте книгу на полке и отметьте, докуда дочитали.'}));return;}
+ let cur=null,grp=null;
+ for(const s of list.slice(0,400)){
+  if(s.date!==cur){cur=s.date;grp=el('div',{class:'day'},el('span',{class:'lab',text:human(s.date)}));box.append(grp);}
+  const b=book(s.bookId);
+  const name=b?b.title:(s.title||'Удалённая книга');
+  grp.append(el('button',{class:'ent'+(s.kind==='finish'?' fin':''),onclick:()=>sessMenu(s)},b?coverEl(b):el('div',{class:'cov'}),
+   el('div',{class:'ent-b'},el('b',{text:name}),el('span',{text:sessText(s)})),
+   el('span',{class:'plus',text:s.kind==='finish'?'✓':fmtDelta(s.type,s.to-s.from)})));
+ }
+}
+function sessMenu(s){
+ const b=book(s.bookId);
+ modal('Запись от '+human(s.date).toLowerCase(),[el('div',{class:'muted',text:(b?b.title+'. ':'')+sessText(s)+'. Если удалить запись, прогресс книги не изменится, она пропадёт только из дневника и статистики.'})],
+  [{label:'Удалить запись',danger:true,fn:()=>{S.sessions=S.sessions.filter(x=>x!==s);save();closeModal();render();}},
+   b?{label:'Открыть книгу',ghost:true,fn:()=>{closeModal();openBook(b.id);}}:null,{label:'Закрыть',fn:closeModal}]);
+}
+
+/* ---------- stats ---------- */
+function streaks(){
+ const days=new Set(S.sessions.map(s=>s.date));let curS=0;let d=today();
+ if(!days.has(d))d=addDays(d,-1);
+ while(days.has(d)){curS++;d=addDays(d,-1);}
+ const sorted=[...days].sort();let best=0,run=0,prev=null;
+ for(const x of sorted){run=(prev&&addDays(prev,1)===x)?run+1:1;best=Math.max(best,run);prev=x;}
+ return{cur:curS,best};
+}
+function renderStats(){
+ const box=$('#v-stats');box.textContent='';const st=el('div',{class:'stats'});box.append(st);
+ const Y=new Date().getFullYear();const ys=String(Y);
+ const doneY=S.books.filter(b=>b.status==='done'&&(b.finished||'').startsWith(ys)).sort((a,b)=>(a.finished||'').localeCompare(b.finished||''));
+ // goal
+ const g=(S.goal&&S.goal[ys])||0;
+ const gc=el('div',{class:'card'});
+ gc.append(el('div',{class:'lab',text:'Цель на '+Y+' год'}));
+ if(g){
+  const start=new Date(Y,0,1),end=new Date(Y+1,0,1),now=new Date();const part=(now-start)/(end-start);
+  const expected=g*part;const diff=Math.round(doneY.length-expected);
+  gc.append(el('div',{class:'goal-top',style:'margin-top:8px'},el('span',{class:'big',text:String(doneY.length)}),el('span',{class:'of',text:'из '+g+' '+plural(g,'книги','книг','книг')})));
+  gc.append(el('div',{class:'goal-bar'},el('i',{style:'width:'+Math.min(100,doneY.length/g*100)+'%'}),el('u',{style:'left:'+Math.min(100,part*100)+'%',title:'Где нужно быть сегодня'})));
+  const msg=doneY.length>=g?'Цель выполнена. Можно поднять планку.':diff>=1?'Опережаете план на '+diff+' '+plural(diff,'книгу','книги','книг')+'.':diff<=-1?'Чтобы успеть, нужно догнать '+(-diff)+' '+plural(-diff,'книгу','книги','книг')+'. Осталось '+Math.ceil((end-now)/864e5)+' '+plural(Math.ceil((end-now)/864e5),'день','дня','дней')+'.':'Идёте точно по плану.';
+  gc.append(el('div',{class:'goal-row'},el('span',{class:'muted',text:msg}),el('button',{class:'btn ghost small',text:'Изменить',onclick:setGoal})));
+ }else{gc.append(el('p',{class:'muted',text:'Поставьте цель, сколько книг хотите прочитать в этом году, и полка покажет, успеваете ли вы.'}),el('button',{class:'btn small',text:'Поставить цель',onclick:setGoal}));}
+ st.append(gc);
+ // tiles
+ const sy=S.sessions.filter(s=>s.date.startsWith(ys)&&s.kind!=='finish');
+ const sum=t=>sy.filter(s=>s.type===t).reduce((a,s)=>a+Math.max(0,s.to-s.from),0);
+ const{cur,best}=streaks();
+ const rated=doneY.filter(b=>b.rating);const avg=rated.length?(rated.reduce((a,b)=>a+b.rating,0)/rated.length):0;
+ const tiles=el('div',{class:'tiles'});
+ const tile=(v,l)=>el('div',{class:'tile'},el('b',{text:v}),el('span',{text:l}));
+ tiles.append(tile(String(cur),cur?plural(cur,'день','дня','дней')+' подряд · рекорд '+best:'дней подряд · рекорд '+best));
+ tiles.append(tile(sum('pages').toLocaleString('ru-RU'),'страниц в '+Y));
+ const aud=sum('audio');if(aud)tiles.append(tile(hm(aud).replace(' мин','м').replace(' ч','ч'),'аудио в '+Y));
+ const chs=sum('chapters');if(chs)tiles.append(tile(String(chs),plural(chs,'глава','главы','глав')+' в '+Y));
+ tiles.append(tile(avg?avg.toFixed(1).replace('.',','):'—','средняя оценка прочитанных'));
+ tiles.append(tile(String(new Set(sy.map(s=>s.date)).size),'дней с чтением в '+Y));
+ if(tiles.children.length%2)tiles.append(tile(String(S.books.filter(b=>b.status==='want').length),'книг ждут на полке'));
+ st.append(tiles);
+ // heatmap
+ const hc=el('div',{class:'card'},el('h3',{class:'h2',text:'Дни чтения'}));
+ const byDay={};S.sessions.forEach(s=>{if(s.kind==='finish')return;byDay[s.date]=(byDay[s.date]||0)+1;});
+ const weeks=22;const t=today();const td=parseD(t);const dow=(td.getDay()+6)%7; // Monday=0
+ const startD=addDays(t,-(weeks-1)*7-dow);
+ const heat=el('div',{class:'heat'}),months=el('div',{class:'months'});let lastM=-1;
+ for(let w=0;w<weeks;w++){
+  const wd=parseD(addDays(startD,w*7));const m=wd.getMonth();
+  months.append(el('span',{text:m!==lastM?MSHORT[m]:''}));lastM=m;
+  for(let i=0;i<7;i++){const d=addDays(startD,w*7+i);const n=byDay[d]||0;
+   heat.append(el('i',{class:(d>t?'fut':n>=4?'l4':n>=3?'l3':n>=2?'l2':n?'l1':'')+(d===t?' today':''),title:human(d)+(n?': '+n+' '+plural(n,'запись','записи','записей'):'')}));}
+ }
+ const hw=el('div',{class:'heat-wrap'},months,heat);hc.append(hw);
+ hc.append(el('div',{class:'heat-legend'},'меньше',el('i',{style:'background:var(--wall-2)'}),el('i',{class:'',style:'background:#B9D2C6'}),el('i',{style:'background:#7FAE98'}),el('i',{style:'background:#4B826C'}),el('i',{style:'background:#2F5D50'}),'больше'));
+ st.append(hc);requestAnimationFrame(()=>{hw.scrollLeft=hw.scrollWidth;});
+ // pages bars 14 days
+ const days=[];for(let i=13;i>=0;i--)days.push(addDays(t,-i));
+ const pv=days.map(d=>S.sessions.filter(s=>s.date===d&&s.type==='pages'&&s.kind!=='finish').reduce((a,s)=>a+Math.max(0,s.to-s.from),0));
+ if(pv.some(Boolean)){
+  const W=340,H=150,L=30,B=22,T=10,max=Math.max(...pv);const step=niceStep(max);const top=Math.ceil(max/step)*step;
+  const bw=(W-L)/14;let svg='';
+  for(let v=0;v<=top;v+=step){const y=T+(H-B-T)*(1-v/top);svg+=`<line x1="${L}" x2="${W}" y1="${y}" y2="${y}" stroke="var(--line)" stroke-width="1"/><text x="${L-6}" y="${y+3.5}" text-anchor="end">${v}</text>`;}
+  pv.forEach((v,i)=>{const h=(H-B-T)*(v/top);const x=L+i*bw+bw*.18;svg+=`<rect x="${x}" y="${T+(H-B-T)-h}" width="${bw*.64}" height="${Math.max(0,h)}" rx="2" fill="${i===13?'var(--accent)':'#7FAE98'}"/>`;
+   if(i%2===1||i===13){const d=parseD(days[i]);svg+=`<text x="${x+bw*.32}" y="${H-6}" text-anchor="middle">${d.getDate()}</text>`;}});
+  const avgP=Math.round(pv.reduce((a,b)=>a+b,0)/14);
+  st.append(el('div',{class:'card bars'},el('h3',{class:'h2',text:'Страницы за две недели'}),el('div',{html:`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Страниц по дням">${svg}</svg>`}),el('div',{class:'muted',text:'В среднем '+avgP+' '+plural(avgP,'страница','страницы','страниц')+' в день. Учитываются книги, где прогресс отмечается по страницам.'})));
+ }
+ // finished this year
+ if(doneY.length){const mc=el('div',{class:'mini-covers'});doneY.forEach(b=>mc.append(el('button',{onclick:()=>openBook(b.id),'aria-label':b.title},coverEl(b))));
+  st.append(el('div',{class:'card'},el('h3',{class:'h2',text:'Прочитано в '+Y}),mc));}
+ // backup
+ st.append(el('div',{class:'card stack'},el('h3',{class:'h2',style:'margin:0',text:'Резервная копия'}),
+  el('div',{class:'muted',text:'Полка хранится только на этом телефоне. Раз в несколько недель сохраняйте копию в «Файлы». По ней же можно перенести полку на другой телефон.'}),
+  el('div',{style:'display:flex;gap:8px;flex-wrap:wrap'},el('button',{class:'btn ghost small',text:'Сохранить копию',onclick:exportJson}),el('button',{class:'btn ghost small',text:'Загрузить копию',onclick:()=>{const f=$('#fileJson');f.value='';f.click();}}))));
+}
+function niceStep(max){const raw=max/4;const p=Math.pow(10,Math.floor(Math.log10(raw||1)));for(const m of [1,2,5,10])if(raw<=m*p)return Math.max(1,m*p);return 10*p;}
+function setGoal(){
+ const ys=String(new Date().getFullYear());const inp=el('input',{id:'goalInp',type:'number',inputmode:'numeric',min:'1',max:'999',value:String((S.goal&&S.goal[ys])||12),class:'num',style:'width:110px'});
+ modal('Цель на '+ys+' год',[el('div',{class:'upd'},el('label',{for:'goalInp',text:'Прочитать'}),inp,el('span',{class:'muted',text:'книг'}))],
+  [(S.goal&&S.goal[ys])?{label:'Убрать цель',danger:true,fn:()=>{delete S.goal[ys];save();closeModal();render();}}:null,{label:'Сохранить',fn:()=>{const v=Math.round(+inp.value);if(!(v>0)){toast('Введите число книг');return;}S.goal=S.goal||{};S.goal[ys]=v;save();closeModal();render();}}]);
+ setTimeout(()=>{inp.focus();inp.select();},60);
+}
+
+/* ---------- book sheet ---------- */
+const sheet=$('#sheet');let openId=null;
+$('#shClose').onclick=closeBook;
+function closeBook(){sheet.classList.remove('open');openId=null;render();}
+function openBook(id){openId=id;renderBook();sheet.scrollTop=0;sheet.classList.add('open');}
+function setStatus(b,st){
+ if(b.status===st)return;const t=today();b.status=st;b.touched=new Date().toISOString();
+ if(st==='reading'&&!b.started)b.started=t;
+ if(st==='done'){b.finished=t;if(!b.started)b.started=t;if(b.type!=='percent'&&total(b))b.cur=total(b);else if(b.type==='percent')b.cur=100;
+  S.sessions.push({id:uid(),bookId:b.id,date:t,ts:new Date().toISOString(),kind:'finish',type:b.type,from:0,to:0,title:b.title});toast('Отличная работа! Книга на полке «Прочитано»');}
+ save();renderBook();
+}
+function logProgress(b,v){
+ v=Math.max(0,Math.round(+v||0));const t=total(b);if(t)v=Math.min(v,t);
+ const from=+b.cur||0;if(v===from){toast('Прогресс не изменился');return;}
+ const now=new Date();const d=today();
+ if(v>from){const same=S.sessions.find(s=>s.bookId===b.id&&s.date===d&&s.kind!=='finish'&&s.to===from);if(same)same.to=v,same.ts=now.toISOString();else S.sessions.push({id:uid(),bookId:b.id,date:d,ts:now.toISOString(),type:b.type,from,to:v,title:b.title});}
+ b.cur=v;b.touched=now.toISOString();
+ if(b.status==='want'||b.status==='dropped'){b.status='reading';if(!b.started)b.started=d;}
+ save();renderBook();if(v>from)toast('Записано: '+fmtDelta(b.type,v-from));
+}
+function renderBook(){
+ const b=book(openId);if(!b){closeBook();return;}
+ $('#shActs').replaceChildren(el('button',{class:'ibtn','aria-label':'Изменить книгу',html:I.edit,onclick:()=>editBook(b)}));
+ const body=$('#shBody');body.textContent='';
+ // hero
+ const dates=[b.started?'Начата '+shortD(b.started):null,b.finished&&b.status==='done'?'дочитана '+shortD(b.finished):null].filter(Boolean).join(', ');
+ body.append(el('div',{class:'hero'},coverEl(b),el('div',{class:'hero-t'},el('h2',{text:b.title||'Без названия'}),b.author?el('p',{text:b.author}):null,dates?el('div',{class:'dates',text:dates}):null)));
+ // status
+ const chips=el('div',{class:'chips'});for(const k of ['want','reading','done','dropped'])chips.append(el('button',{'data-st':k,'aria-pressed':b.status===k,text:STS[k],onclick:()=>setStatus(b,k)}));
+ body.append(chips);
+ // progress
+ if(b.status!=='want'){
+  const t=total(b);const card=el('div',{class:'card'});
+  const pct=Math.round(frac(b)*100);
+  card.append(el('div',{class:'prog-head'},el('span',{class:'pct',text:(t||b.status==='done')?pct+'%':fmtVal(b,b.cur)}),
+   el('span',{class:'of',text:b.type==='percent'?'':b.type==='audio'?hm(b.cur)+(t?' из '+hm(t):''):(b.type==='pages'?'стр. ':'глава ')+(+b.cur||0)+(t?' из '+t:'')})));
+  card.append(el('div',{class:'pbig'},el('i',{style:'width:'+pct+'%'})));
+  if(b.status!=='done'){
+   if(b.type==='percent'){
+    const out=el('span',{class:'muted',text:(+b.cur||0)+'%'});
+    const r=el('input',{type:'range',id:'pr',min:'0',max:'100',step:'1',value:String(+b.cur||0),'aria-label':'Процент прочитанного'});r.oninput=()=>out.textContent=r.value+'%';
+    card.append(el('div',{class:'upd',style:'flex-wrap:nowrap'},r,out),el('div',{class:'quick'},el('button',{text:'Записать',style:'background:var(--accent);color:#fff',onclick:()=>logProgress(b,r.value)})));
+   }else if(b.type==='audio'){
+    const c=+b.cur||0;const h=el('input',{class:'num sm',id:'ah',type:'number',inputmode:'numeric',min:'0',value:String(Math.floor(c/60))});const m=el('input',{class:'num sm',id:'am',type:'number',inputmode:'numeric',min:'0',max:'59',value:String(c%60)});
+    const go=()=>logProgress(b,(+h.value||0)*60+(+m.value||0));
+    card.append(el('div',{class:'upd'},el('label',{text:'Прослушано'}),h,el('span',{class:'muted',text:'ч'}),m,el('span',{class:'muted',text:'мин'})),
+     el('div',{class:'quick'},el('button',{text:'Записать',style:'background:var(--accent);color:#fff',onclick:go}),...[15,30,60].map(n=>el('button',{text:'+'+hm(n),onclick:()=>logProgress(b,c+n)}))));
+   }else{
+    const n=el('input',{class:'num',id:'pn',type:'number',inputmode:'numeric',min:'0',value:String(+b.cur||0)});
+    n.addEventListener('keydown',e=>{if(e.key==='Enter')logProgress(b,n.value);});
+    const steps=b.type==='pages'?[10,25,50]:[1];
+    card.append(el('div',{class:'upd'},el('label',{for:'pn',text:b.type==='pages'?'Сейчас на странице':'Прочитано глав'}),n,t?el('span',{class:'muted',text:'из '+t}):null),
+     el('div',{class:'quick'},el('button',{text:'Записать',style:'background:var(--accent);color:#fff',onclick:()=>logProgress(b,n.value)}),...steps.map(s=>el('button',{text:'+'+s,onclick:()=>logProgress(b,(+b.cur||0)+s)}))));
+   }
+   if(t&&(+b.cur||0)>=t)card.append(el('div',{class:'done-cta'},el('span',{text:'Вы дошли до конца.'}),el('button',{class:'btn small',text:'Отметить прочитанной',onclick:()=>setStatus(b,'done')})));
+   if(!t&&b.type!=='percent')card.append(el('div',{class:'muted',style:'margin-top:10px',text:'Укажите в настройках книги, сколько всего '+(b.type==='pages'?'страниц':b.type==='audio'?'длится запись':'глав')+', и появится процент.'}));
+  }
+  body.append(card);
+ }
+ // rating & review
+ const rc=el('div',{class:'card stack'});
+ const stars=el('div',{class:'stars',role:'radiogroup','aria-label':'Оценка'});
+ for(let i=1;i<=5;i++)stars.append(el('button',{class:i<=(b.rating||0)?'on':'',html:I.star,'aria-label':i+' из 5',onclick:()=>{b.rating=b.rating===i?0:i;save();renderBook();}}));
+ const rv=el('textarea',{id:'review',placeholder:'Мысли о книге, что понравилось, что нет'});rv.value=b.review||'';rv.oninput=()=>{b.review=rv.value;save();};
+ rc.append(el('div',{class:'lab',text:'Оценка'}),stars,el('label',{class:'fld'},el('span',{text:'Заметки'}),rv));
+ body.append(rc);
+ // quotes
+ const qc=el('div',{class:'card stack'},el('div',{class:'lab',text:'Цитаты'}));
+ (b.quotes||[]).forEach((q,i)=>qc.append(el('div',{class:'quote'},q.text,q.where?el('small',{text:q.where}):null,el('button',{class:'x',html:I.x,'aria-label':'Удалить цитату',onclick:()=>{b.quotes.splice(i,1);save();renderBook();}}))));
+ qc.append(el('button',{class:'link',style:'align-self:flex-start',text:'+ Добавить цитату',onclick:()=>addQuote(b)}));
+ body.append(qc);
+ // history
+ const hs=S.sessions.filter(s=>s.bookId===b.id).sort((a,c)=>(c.date+c.ts).localeCompare(a.date+a.ts));
+ if(hs.length){const hc=el('div',{class:'card'},el('div',{class:'lab',style:'margin-bottom:6px',text:'История чтения'}));const h=el('div',{class:'hist'});
+  hs.slice(0,60).forEach(s=>h.append(el('div',null,el('span',{text:human(s.date)}),el('span',{text:s.kind==='finish'?'Книга прочитана':sessText(s)+'  '+fmtDelta(s.type,s.to-s.from)}))));hc.append(h);body.append(hc);}
+}
+function addQuote(b){
+ const t=el('textarea',{id:'qText',placeholder:'Текст цитаты'});const w=el('input',{id:'qWhere',type:'text',placeholder:'Например: стр. 112'});
+ modal('Цитата',[el('label',{class:'fld'},el('span',{text:'Цитата'}),t),el('label',{class:'fld'},el('span',{text:'Где в книге'}),w)],
+  [{label:'Отмена',ghost:true,fn:closeModal},{label:'Сохранить',fn:()=>{if(!t.value.trim()){toast('Впишите текст цитаты');return;}b.quotes=b.quotes||[];b.quotes.push({text:t.value.trim(),where:w.value.trim()});save();closeModal();renderBook();}}]);
+ if(b.type==='pages'&&b.cur)w.value='стр. '+b.cur;
+ setTimeout(()=>t.focus(),60);
+}
+
+/* ---------- add / edit book ---------- */
+function editBook(b,defStatus){
+ const isNew=!b;
+ const d=b?{...b}:{id:uid(),title:'',author:'',type:'pages',total:'',cur:0,status:defStatus||(shelf||'reading'),added:new Date().toISOString(),quotes:[]};
+ let cover=covers[d.id]||null;
+ function coverPreview(){const tmp={...d,title:ti.value,author:au.value};const c=cover?el('div',{class:'cov',style:'background-image:url("'+cover+'")'}):(()=>{const x=el('div',{class:'cov'});x.style.backgroundColor=hashC(tmp.title+tmp.author);x.append(el('div',{class:'ph'},el('b',{text:tmp.title||'Название'}),el('small',{text:tmp.author||''})));return x;})();return c;}
+ const ti=el('input',{id:'bTitle',type:'text',value:d.title,placeholder:'Название книги',autocapitalize:'sentences'});
+ const au=el('input',{id:'bAuthor',type:'text',value:d.author,placeholder:'Имя автора',autocapitalize:'words'});
+ const pvBox=el('div');const refreshPv=()=>pvBox.replaceChildren(coverPreview());
+ ti.oninput=au.oninput=()=>{if(!cover)refreshPv();};
+ const pick=el('button',{class:'link',type:'button',text:cover?'Заменить обложку':'Добавить обложку'});
+ const rm=el('button',{class:'link red',type:'button',text:'Убрать обложку',hidden:!cover});
+ pick.onclick=()=>pickImage(url=>{cover=url;refreshPv();pick.textContent='Заменить обложку';rm.hidden=false;});
+ rm.onclick=()=>{cover=null;refreshPv();rm.hidden=true;pick.textContent='Добавить обложку';};
+ // type & total
+ const typeSeg=el('div',{class:'typeseg'});const totBox=el('div');
+ const totN=el('input',{id:'bTotal',type:'number',inputmode:'numeric',min:'1',value:d.type==='audio'?'':String(d.total||'')});
+ const totH=el('input',{id:'bTotH',type:'number',inputmode:'numeric',min:'0',value:d.type==='audio'&&d.total?String(Math.floor(d.total/60)):''});
+ const totM=el('input',{id:'bTotM',type:'number',inputmode:'numeric',min:'0',max:'59',value:d.type==='audio'&&d.total?String(d.total%60):''});
+ const drawTot=()=>{typeSeg.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x.dataset.t===d.type));
+  if(d.type==='percent')totBox.replaceChildren(el('div',{class:'muted',text:'Прогресс будет отмечаться в процентах, как в электронной читалке.'}));
+  else if(d.type==='audio')totBox.replaceChildren(el('div',{class:'fld'},el('span',{text:'Длительность записи'}),el('div',{class:'row2'},el('label',{class:'fld'},totH,el('span',{text:'часов'})),el('label',{class:'fld'},totM,el('span',{text:'минут'})))));
+  else totBox.replaceChildren(el('label',{class:'fld'},el('span',{text:d.type==='pages'?'Всего страниц':'Всего глав'}),totN));};
+ for(const k in TYPES)typeSeg.append(el('button',{type:'button','data-t':k,text:TYPES[k],onclick:()=>{d.type=k;drawTot();}}));
+ drawTot();
+ const stSel=el('select',{id:'bStatus'},Object.keys(ST).map(k=>el('option',{value:k,text:ST[k],selected:d.status===k?true:null})));
+ refreshPv();
+ const body=[
+  el('div',{class:'pick'},pvBox,el('div',{class:'acts'},pick,rm,el('span',{class:'muted',text:'Можно сфотографировать книгу или выбрать картинку из галереи.'}))),
+  el('label',{class:'fld'},el('span',{text:'Название'}),ti),
+  el('label',{class:'fld'},el('span',{text:'Автор'}),au),
+  el('div',{class:'fld'},el('span',{text:'Как отмечать прогресс'}),typeSeg),
+  totBox,
+  el('label',{class:'fld'},el('span',{text:'Полка'}),stSel)
+ ];
+ modal(isNew?'Новая книга':'Книга',body,[
+  isNew?null:{label:'Удалить',danger:true,fn:()=>confirmDel(b)},
+  {label:'Отмена',ghost:true,fn:closeModal},
+  {label:isNew?'Добавить':'Сохранить',fn:async()=>{
+   const title=ti.value.trim();if(!title){toast('Впишите название книги');ti.focus();return;}
+   const oldType=b&&b.type;
+   d.title=title;d.author=au.value.trim();
+   d.total=d.type==='percent'?100:d.type==='audio'?((+totH.value||0)*60+(+totM.value||0)):(Math.round(+totN.value)||0);
+   if(oldType&&oldType!==d.type)d.cur=0;
+   const newSt=stSel.value;
+   if(isNew){d.status=newSt;const t=today();if(newSt==='reading')d.started=t;if(newSt==='done'){d.started=t;d.finished=t;d.cur=d.total||0;}d.touched=new Date().toISOString();S.books.push(d);}
+   else{Object.assign(b,d);if(b.status!==newSt){b.status=d.status;closeModal();setStatus(b,newSt);}}
+   if(cover)covers[d.id]=cover;else delete covers[d.id];
+   await Store[cover?'set':'del']('cover:'+d.id,cover);
+   save();closeModal();
+   if(isNew){shelf=d.status;renderSeg();setView('shelf');toast('Книга добавлена на полку «'+ST[d.status]+'»');}
+   else{if(openId)renderBook();render();}
+  }}
+ ]);
+ if(isNew)setTimeout(()=>ti.focus(),80);
+}
+function confirmDel(b){
+ modal('Удалить книгу?',[el('div',{class:'muted',text:'«'+b.title+'» исчезнет с полки вместе с оценкой, заметками и цитатами. Записи в дневнике останутся.'})],
+  [{label:'Отмена',ghost:true,fn:closeModal},{label:'Удалить',danger:true,fn:()=>{S.books=S.books.filter(x=>x!==b);delete covers[b.id];Store.del('cover:'+b.id);save();closeModal();closeBook();}}]);
+}
+
+/* ---------- images ---------- */
+let imgCb=null;
+function pickImage(cb){imgCb=cb;const f=$('#fileImg');f.value='';f.click();}
+$('#fileImg').addEventListener('change',async e=>{const file=e.target.files[0];if(!file||!imgCb)return;const cb=imgCb;imgCb=null;try{cb(await shrink(file,700));}catch(_){toast('Не получилось открыть картинку');}});
+function shrink(file,max){return new Promise((res,rej)=>{const url=URL.createObjectURL(file);const im=new Image();
+ im.onload=()=>{const k=Math.min(1,max/Math.max(im.naturalWidth,im.naturalHeight));const c=document.createElement('canvas');c.width=Math.round(im.naturalWidth*k);c.height=Math.round(im.naturalHeight*k);const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);g.drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(url);res(c.toDataURL('image/jpeg',.85));};
+ im.onerror=()=>{URL.revokeObjectURL(url);rej();};im.src=url;});}
+
+/* ---------- modal & toast ---------- */
+let modalEl=null;
+function modal(title,body,acts){closeModal();
+ const dlg=el('div',{class:'dlg',role:'dialog','aria-modal':'true'},el('h3',{text:title}),...body.filter(Boolean),
+  el('div',{class:'acts'},(acts||[]).filter(Boolean).map(a=>el('button',{class:'btn'+(a.danger?' danger':a.ghost?' ghost':''),type:'button',text:a.label,onclick:a.fn,style:a.danger?'margin-right:auto':null}))));
+ modalEl=el('div',{class:'modal',onclick:e=>{if(e.target===modalEl)closeModal();}},dlg);document.body.append(modalEl);}
+function closeModal(){if(modalEl){modalEl.remove();modalEl=null;}}
+let toastT=null;
+function toast(t,ms){document.querySelectorAll('.toast').forEach(x=>x.remove());const d=el('div',{class:'toast',role:'status',text:t});document.body.append(d);clearTimeout(toastT);toastT=setTimeout(()=>d.remove(),ms||2400);}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(modalEl)closeModal();else if(openId)closeBook();}});
+
+/* ---------- backup ---------- */
+function exportJson(){
+ const data={app:'moya-polka',v:1,savedAt:new Date().toISOString(),state:S,covers};
+ const blob=new Blob([JSON.stringify(data)],{type:'application/json'});const name='Моя полка — копия '+today()+'.json';
+ try{const u=URL.createObjectURL(blob);const a=el('a',{href:u,download:name});document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),60000);toast('Копия готова. Сохраните её в «Файлы».');}
+ catch(_){toast('Не получилось сохранить файл');}
+}
+$('#fileJson').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;
+ try{const data=JSON.parse(await f.text());if(data.app!=='moya-polka'||!data.state||!Array.isArray(data.state.books))throw 0;
+  modal('Загрузить копию?',[el('div',{class:'muted',text:'В копии '+data.state.books.length+' '+plural(data.state.books.length,'книга','книги','книг')+'. Текущая полка на этом телефоне будет заменена.'})],
+   [{label:'Отмена',ghost:true,fn:closeModal},{label:'Загрузить',fn:async()=>{await Store.clear();S=normalize(data.state);for(const k in covers)delete covers[k];Object.assign(covers,data.covers||{});
+     await Store.set('state',S);for(const id in covers)await Store.set('cover:'+id,covers[id]);closeModal();setView('shelf');toast('Полка восстановлена');}}]);
+ }catch(_){toast('Это не файл копии полки. Выберите .json, сохранённый из этого приложения.',4000);}
+});
+
+/* ---------- start ---------- */
+function normalize(s){s=s||{};s.books=s.books||[];s.sessions=s.sessions||[];s.goal=s.goal||{};return s;}
+async function start(){
+ await Store.open();
+ S=normalize(await Store.get('state'));
+ for(const b of S.books){const c=await Store.get('cover:'+b.id);if(c)covers[b.id]=c;}
+ try{const sh=localStorage.getItem('rd:shelf');if(sh&&ST[sh])shelf=sh;}catch(_){}
+ if(!S.books.length)shelf='reading';
+ else if(!S.books.some(b=>b.status===shelf)){const f=['reading','want','done','dropped'].find(k=>S.books.some(b=>b.status===k));if(f)shelf=f;}
+ render();
+ if(Store.mode!=='idb')toast('Хранилище недоступно: данные пропадут после закрытия',5000);
+}
+start();
+})();
+</script>
+<script>
+if('serviceWorker' in navigator&&location.protocol.startsWith('http')){
+  navigator.serviceWorker.register('sw.js',{scope:'./'}).catch(()=>{});
+  navigator.serviceWorker.ready.then(async()=>{
+    try{const c=await caches.open('polka-v1');if(!(await c.match('index.html')))return;
+      if(localStorage.getItem('rd:offline')==='1')return;localStorage.setItem('rd:offline','1');}catch(e){return;}
+    const d=document.createElement('div');d.className='toast';d.setAttribute('role','status');
+    d.textContent='Готово: полка открывается и без интернета';document.body.append(d);setTimeout(()=>d.remove(),4500);
+  }).catch(()=>{});
+}
+</script>
+</body>
+</html>

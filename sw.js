@@ -1,5 +1,5 @@
 // Offline cache: after one launch with internet the app opens without it.
-const CACHE='kniga-v2';
+const CACHE='kniga-v3';
 const SHELL=['./','index.html','manifest.webmanifest','icon-180.png','icon-192.png','icon-512.png'];
 const LIBS=['https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
             'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'];
@@ -21,7 +21,7 @@ self.addEventListener('install',e=>{
 
 self.addEventListener('activate',e=>{
   e.waitUntil((async()=>{
-    for(const k of await caches.keys())if(k!==CACHE)await caches.delete(k);
+    for(const k of await caches.keys())if(k.startsWith('kniga-')&&k!==CACHE)await caches.delete(k);
     await self.clients.claim();
   })());
 });
@@ -34,6 +34,9 @@ function refresh(req){
 self.addEventListener('fetch',e=>{
   const req=e.request;
   if(req.method!=='GET')return;
+  const path=new URL(req.url).pathname;
+  // other apps in subfolders (e.g. /chtenie/) handle themselves
+  if(new URL(req.url).origin===location.origin&&/\/kniga\/[^/]+\//.test(path))return;
   if(req.mode==='navigate'){
     e.respondWith((async()=>{
       const c=await caches.open(CACHE);
