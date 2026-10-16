@@ -152,7 +152,9 @@ main{padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px
 /* ---------- toolbar ---------- */
 .bar{position:fixed;left:0;right:0;bottom:0;z-index:35;background:rgba(252,252,249,.96);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-top:1px solid var(--line);
   padding-bottom:env(safe-area-inset-bottom,0px);padding-left:max(8px,env(safe-area-inset-left,0px));padding-right:max(8px,env(safe-area-inset-right,0px))}
-.bar.kb{padding-bottom:0}
+.bar.kb{padding-bottom:0;transition:opacity .12s}
+.bar.moving{opacity:0;pointer-events:none}
+body.kb main{padding-bottom:65vh}
 .bar-in{display:flex;justify-content:center;gap:2px;height:var(--bar-h);align-items:center;max-width:600px;margin:0 auto;overflow-x:auto}
 .tb{min-width:44px;height:40px;padding:0 8px;border-radius:10px;display:grid;place-items:center;font-size:15px;color:var(--ink);flex:none}
 .tb:active,.tb.on{background:var(--accent-soft);color:var(--accent)}
@@ -988,7 +990,53 @@ async function makePdf(){
 
 /* ---------- keyboard-aware toolbar ---------- */
 const bar=$('#bar');
-if(window.visualViewport){const vv=window.visualViewport;const fix=()=>{const off=Math.max(0,window.innerHeight-vv.height-vv.offsetTop);bar.style.transform=off>40?'translateY(-'+off+'px)':'';bar.classList.toggle('kb',off>40);};vv.addEventListener('resize',fix);vv.addEventListener('scroll',fix);}
+// With the keyboard open the bar is pinned to the bottom of the *visible* area
+// (above the keyboard), hidden while the page scrolls, and the caret is kept above it.
+let kbOpen=false,scrollT=null,caretT=null;
+function placeBar(){
+ const vv=window.visualViewport;if(!vv)return;
+ const kb=(window.innerHeight-vv.height)>120&&document.activeElement&&(prose.contains(document.activeElement)||document.activeElement===prose||document.activeElement===titleEl);
+ if(kb!==kbOpen){kbOpen=kb;document.body.classList.toggle('kb',kb);bar.classList.toggle('kb',kb);}
+ if(kb){bar.style.top=Math.round(vv.offsetTop+vv.height-bar.offsetHeight)+'px';bar.style.bottom='auto';}
+ else{bar.style.top='';bar.style.bottom='';}
+}
+function caretRect(){
+ const sel=getSelection();if(!sel.rangeCount)return null;
+ const node=sel.anchorNode;if(!node||!(prose.contains(node)||titleEl.contains(node)))return null;
+ const r=sel.getRangeAt(0).cloneRange();r.collapse(false);
+ let rect=r.getClientRects()[0]||r.getBoundingClientRect();
+ if(!rect||(rect.top===0&&rect.bottom===0)){const b=(node.nodeType===1?node:node.parentElement);rect=b?b.getBoundingClientRect():null;
+  if(rect&&rect.height>60){rect={top:rect.bottom-30,bottom:rect.bottom};}}
+ return rect;
+}
+function keepCaretVisible(){
+ if(!kbOpen)return;const vv=window.visualViewport;if(!vv)return;
+ const r=caretRect();if(!r)return;
+ const visBottom=vv.offsetTop+vv.height-bar.offsetHeight-18;
+ const visTop=vv.offsetTop+16;
+ if(r.bottom>visBottom)window.scrollBy(0,Math.ceil(r.bottom-visBottom));
+ else if(r.top<visTop)window.scrollBy(0,Math.floor(r.top-visTop));
+}
+function soonCaret(){clearTimeout(caretT);caretT=setTimeout(()=>{placeBar();keepCaretVisible();},30);}
+function onScrollMove(){
+ if(!kbOpen){placeBar();return;}
+ bar.classList.add('moving');clearTimeout(scrollT);
+ scrollT=setTimeout(()=>{placeBar();bar.classList.remove('moving');},140);
+}
+if(window.visualViewport){
+ const vv=window.visualViewport;
+ vv.addEventListener('resize',()=>{placeBar();soonCaret();});
+ vv.addEventListener('scroll',onScrollMove);
+}
+addEventListener('scroll',onScrollMove,{passive:true});
+prose.addEventListener('input',soonCaret);
+prose.addEventListener('keyup',e=>{if(e.key==='Enter')soonCaret();});
+titleEl.addEventListener('input',soonCaret);
+document.addEventListener('selectionchange',()=>{if(kbOpen)soonCaret();});
+prose.addEventListener('focus',()=>setTimeout(()=>{placeBar();keepCaretVisible();},350));
+titleEl.addEventListener('focus',()=>setTimeout(()=>{placeBar();keepCaretVisible();},350));
+prose.addEventListener('blur',()=>setTimeout(placeBar,60));
+titleEl.addEventListener('blur',()=>setTimeout(placeBar,60));
 
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')flushAll();});
 addEventListener('pagehide',flushAll);
@@ -1002,7 +1050,7 @@ load();
 if('serviceWorker' in navigator&&location.protocol.startsWith('http')){
   navigator.serviceWorker.register('sw.js').catch(()=>{});
   navigator.serviceWorker.ready.then(async()=>{
-    try{const c=await caches.open('kniga-v4');if(!(await c.match('index.html')))return;
+    try{const c=await caches.open('kniga-v5');if(!(await c.match('index.html')))return;
       if(localStorage.getItem('kp:offline')==='2')return;localStorage.setItem('kp:offline','2');}catch(e){return;}
     const d=document.createElement('div');d.className='toast';d.setAttribute('role','status');
     d.textContent='Готово: теперь приложение открывается и без интернета';document.body.append(d);setTimeout(()=>d.remove(),4500);
