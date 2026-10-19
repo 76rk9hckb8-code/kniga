@@ -157,11 +157,11 @@ main{padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px
 .bar.moving{opacity:0;pointer-events:none}
 body.kb main{padding-bottom:45vh}
 .bar-in{display:flex;justify-content:flex-start;gap:1px;height:var(--bar-h);align-items:center;max-width:600px;margin:0 auto;overflow-x:auto}
-.tb{min-width:35px;height:40px;padding:0 5px;border-radius:10px;display:grid;place-items:center;font-size:15px;color:var(--ink);flex:none}
+.tb{min-width:30px;height:40px;padding:0 3px;border-radius:10px;display:grid;place-items:center;font-size:15px;color:var(--ink);flex:none}
 .tb:active{background:var(--accent-soft);color:var(--accent)}
 .tb.on{background:var(--accent);color:var(--on-accent)}
 .tb.serif{font-family:var(--font-book)}
-.tb .ico{width:20px;height:20px}
+.tb .ico{width:19px;height:19px}
 .tb-sep{width:1px;height:22px;background:var(--line);margin:0 2px;flex:none}
 .bar-in > :first-child{margin-left:auto}.bar-in > :last-child{margin-right:auto}
 .tb.dim{opacity:.35}
@@ -256,6 +256,25 @@ body.kb main{padding-bottom:45vh}
 
 
 
+
+/* ---------- dictation ---------- */
+.voice{position:fixed;left:0;right:0;bottom:0;z-index:74;background:var(--paper);border-top:1px solid var(--line);box-shadow:0 -10px 34px rgba(0,0,0,.16);border-radius:18px 18px 0 0;padding:12px max(14px,env(safe-area-inset-right,0px)) calc(14px + env(safe-area-inset-bottom,0px)) max(14px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:10px;max-width:640px;margin:0 auto}
+@media (min-width:960px){.voice{left:var(--side-w)}}
+.v-top{display:flex;align-items:center;gap:10px}.v-top b{font-family:var(--font-display);font-size:20px;font-weight:600;flex:1}
+.v-top span{font-size:13px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+#vText{font:inherit;font-family:var(--font-book);font-size:16px;line-height:1.5;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--field);color:var(--ink);resize:none;min-height:110px;max-height:34vh;width:100%;box-sizing:border-box}
+.v-state{font-size:13px;color:var(--ink-2);line-height:1.4;min-height:1.4em}
+.v-row{display:flex;align-items:center;gap:12px}
+.v-mic{width:58px;height:58px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;flex:none;position:relative}
+.v-mic .ico{width:26px;height:26px}
+.v-mic.on{background:var(--danger);color:#fff}
+.v-mic.on::after{content:"";position:absolute;inset:-6px;border-radius:50%;border:2px solid var(--danger);opacity:.5;animation:vpulse 1.4s infinite}
+@keyframes vpulse{0%{transform:scale(.9);opacity:.6}100%{transform:scale(1.25);opacity:0}}
+.v-acts{flex:1;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.v-acts .btn:disabled{opacity:.45}
+body.voice-open .bar{visibility:hidden}
+body.voice-open .nudge,body.ai-open .nudge{display:none}
+@media (prefers-reduced-motion:reduce){.v-mic.on::after{animation:none}}
 /* ---------- AI helper ---------- */
 .ai-top{color:var(--accent)}
 .ai{position:fixed;left:0;right:0;top:0;height:100%;z-index:75;background:var(--desk);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px)}
@@ -439,6 +458,7 @@ body.focus .side,body.focus .scrim{display:none}
     <button class="tb serif" data-cmd="bold" title="Жирный" aria-label="Жирный" style="font-weight:700">Ж</button>
     <button class="tb serif" data-cmd="italic" title="Курсив" aria-label="Курсив" style="font-style:italic">К</button>
     <button class="tb" data-cmd="note" title="Заметка на полях" aria-label="Заметка на полях"><svg class="ico" viewBox="0 0 24 24"><path d="M5 4.5h14v11H10l-5 4v-15Z"/><path d="M9 9h6M9 12h4"/></svg></button>
+    <button class="tb" data-cmd="mic" title="Надиктовать" aria-label="Надиктовать голосом"><svg class="ico" viewBox="0 0 24 24"><rect x="9" y="3.5" width="6" height="11" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v2.5"/></svg></button>
     <button class="tb" data-cmd="img" title="Вставить картинку" aria-label="Вставить картинку"><svg class="ico" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="14" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="m4 17 5-4.5 4 3.5 3-2.5 4 3.5"/></svg></button>
     <button class="tb" data-cmd="done" title="Скрыть клавиатуру" aria-label="Скрыть клавиатуру"><svg class="ico" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></button>
   </div>
@@ -459,6 +479,13 @@ body.focus .side,body.focus .scrim{display:none}
   <div class="prev-b" id="prevBody"></div>
 </section>
 
+<section class="voice" id="voice" hidden role="dialog" aria-label="Диктовка">
+  <div class="v-top"><b>Диктовка</b><span id="vTime">0:00</span><button class="ibtn" id="vClose" aria-label="Закрыть диктовку"><svg class="ico" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+  <textarea id="vText" rows="5" placeholder="Здесь появится надиктованный текст" readonly></textarea>
+  <div class="v-state" id="vState"></div>
+  <div class="v-row"><button class="v-mic" id="vMic" aria-label="Запись"><svg class="ico" viewBox="0 0 24 24"><rect x="9" y="3.5" width="6" height="11" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v2.5"/></svg></button>
+   <div class="v-acts"><button class="btn ghost" id="vFix" type="button">✦ Поправить</button><button class="btn" id="vIns" type="button">Вставить</button></div></div>
+</section>
 <section class="ai" id="ai" hidden role="dialog" aria-label="Помощник">
   <div class="ai-h">
     <button class="ibtn" id="aiClose" aria-label="Закрыть помощника"><svg class="ico" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>
@@ -823,6 +850,7 @@ $('#bar').addEventListener('click',e=>{
  if(cmd==='redo'){redo();return;}
  if(cmd==='note'){addMarginNote();return;}
  if(cmd==='img'){pickImage(1400,url=>insertFigure(url));return;}
+ if(cmd==='mic'){openVoice();return;}
  if(!prose.contains(getSelection().anchorNode)){if(savedRange){prose.focus();const s=getSelection();s.removeAllRanges();s.addRange(savedRange);}else{toast('Поставьте курсор в текст главы');return;}}
  histRecord();
  if(cmd==='bold'||cmd==='italic')document.execCommand(cmd);
@@ -1196,7 +1224,7 @@ for(const t of [prose,titleEl]){
 
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')flushAll();});
 addEventListener('pagehide',flushAll);
-document.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='f'){e.preventDefault();openDrawer('find');setTimeout(()=>$('#q').focus(),60);}if(e.key==='Escape'){if(!modal.hidden)closeModal();else if(!$('#ai').hidden)closeAI();else closeDrawer();}});
+document.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='f'){e.preventDefault();openDrawer('find');setTimeout(()=>$('#q').focus(),60);}if(e.key==='Escape'){if(!$('#voice').hidden)vClose();else if(!modal.hidden)closeModal();else if(!$('#ai').hidden)closeAI();else closeDrawer();}});
 
 /* ======================================================================
    Writer tools: undo/redo, trash, versions, save status, backup nudges,
@@ -1948,8 +1976,8 @@ function aiSettings(firstTime){
   key.value=keys[prov]||'';base.value=prov===c.prov&&c.base?c.base:p.base;model.value=prov===c.prov&&c.model?c.model:p.model;baseFld.hidden=prov!=='custom';};
  for(const k in AI_PROV)seg.append(el('button',{type:'button','data-p':k,text:k==='openrouter'?'OpenRouter':k==='deepseek'?'DeepSeek':'Другой',onclick:()=>{keys[prov]=key.value.trim();prov=k;draw();}}));
  draw();
- const result=el('div',{class:'fine'});
- const save=()=>{keys[prov]=key.value.trim();const p=AI_PROV[prov];aiSaveCfg({prov,key:keys[prov],keys,base:base.value.trim()||p.base,model:model.value.trim()||p.model});};
+ const result=el('div',{class:'fine'});const vbox=voiceSettingsBox();
+ const save=()=>{keys[prov]=key.value.trim();const p=AI_PROV[prov];aiSaveCfg({prov,key:keys[prov],keys,base:base.value.trim()||p.base,model:model.value.trim()||p.model});vbox.save();};
  openModal('Настройки помощника',[
   firstTime?el('div',{class:'note',style:'margin:0',text:'Чтобы помощник заработал, нужен бесплатный ключ доступа к нейросети. Это делается один раз, около двух минут.'}):null,
   el('div',{class:'fld'},el('span',{text:'Сервис'}),seg,hint,link),
@@ -1957,7 +1985,8 @@ function aiSettings(firstTime){
   baseFld,
   el('label',{class:'fld'},el('span',{text:'Модель'}),model),
   el('div',{class:'fine',text:'Ключ хранится только на этом телефоне и не попадает в резервные копии книги. Текст главы и карточки отправляются выбранному сервису только когда вы что-то спрашиваете у помощника.'}),
-  result
+  result,
+  vbox.node
  ],[
   {label:'Проверить',ghost:true,fn:async()=>{save();result.textContent='Проверяю…';try{const t=await aiCall([{role:'user',content:'Ответь одним словом: работает?'}],null,{temperature:0});result.textContent='Работает. Ответ сервиса: «'+t.trim().slice(0,60)+'»';}catch(e){result.textContent=aiErrText(e);}}},
   {label:'Сохранить',primary:true,fn:()=>{save();closeModal();toast('Настройки помощника сохранены');}}]);
@@ -1970,10 +1999,124 @@ function aiSubmit(){
 }
 function aiGrow(){const ta=$('#aiIn');ta.style.height='auto';ta.style.height=Math.min(140,ta.scrollHeight)+'px';}
 
+/* ======================================================================
+   Voice dictation: the phone's own speech recognition (free) or a
+   Whisper-compatible service; optional AI clean-up before inserting.
+   ====================================================================== */
+function vCfg(){let c={};try{c=JSON.parse(localStorage.getItem('kp:voice')||'{}')}catch(e){}return{engine:c.engine||'phone',base:(c.base||'').replace(/\/+$/,''),key:c.key||'',model:c.model||'whisper-large-v3-turbo',autofix:c.autofix===true};}
+function vSave(c){try{localStorage.setItem('kp:voice',JSON.stringify(c));}catch(e){}}
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+let vSess=0,vRec=null,vOn=false,vFinal='',vInterim='',vMedia=null,vChunks=[],vStream=null,vSel=null,vTimer=null,vStart=0;
+
+const VW=(w)=>new RegExp('[ \\t]*(?<![\\p{L}\\p{N}])'+w+'(?![\\p{L}\\p{N}])','giu');
+const V_CMDS=[[VW('новый абзац'),'\n'],[VW('новая строка'),'\n'],[VW('вопросительный знак'),'?'],[VW('восклицательный знак'),'!'],
+ [VW('многоточие'),'…'],[VW('двоеточие'),':'],[VW('точка с запятой'),';'],[VW('запятая'),','],[VW('точка'),'.'],
+ [VW('открыть кавычки'),' «'],[VW('закрыть кавычки'),'»'],[VW('тире'),' — ']];
+function vTidy(t){
+ for(const [re,r] of V_CMDS)t=t.replace(re,r);
+ t=t.replace(/[ \t]+/g,' ').replace(/ +([,.!?:;…»])/g,'$1').replace(/« +/g,'«').replace(/([,.!?:;…])(?=[^\s\n»)])/g,'$1 ').replace(/ *\n */g,'\n').trim();
+ t=t.replace(/(^|[.!?…]\s+|\n\s*(?:—\s)?|«)([a-zа-яё])/g,(m,a,b)=>(a==='«'&&!/(^|[.!?…]\s*)«$/.test(t.slice(0,t.indexOf(m)+1))?a+b:a+b.toUpperCase()));
+ return t;
+}
+function vText(){return vTidy((vFinal+' '+vInterim).trim());}
+
+function vPanel(){return $('#voice');}
+function openVoice(){
+ vSel=null;const sel=getSelection();
+ if(sel.rangeCount&&prose.contains(sel.anchorNode))vSel=sel.getRangeAt(0).cloneRange();else if(savedRange&&prose.contains(savedRange.startContainer))vSel=savedRange.cloneRange();
+ if(!vSel){toast('Поставьте курсор в место, куда нужно вставить текст');return;}
+ prose.blur();titleEl.blur();
+ vSess++;vFinal='';vInterim='';$('#vText').value='';$('#vText').readOnly=true;vPanel().hidden=false;document.body.classList.add('voice-open');
+ $('#vFix').hidden=!(aiCfg().key||aiCfg().prov==='custom');
+ vUpd();vBegin();
+}
+function vUpd(msg){
+ const on=vOn;$('#vMic').classList.toggle('on',on);$('#vMic').setAttribute('aria-label',on?'Остановить запись':'Продолжить запись');
+ $('#vState').textContent=msg||(on?(vCfg().engine==='phone'?'Слушаю… Говорите. «Новый абзац», «запятая», «точка» работают как команды.':'Идёт запись… Нажмите на микрофон, чтобы закончить.'):( $('#vText').value.trim()?'Можно поправить текст руками, продолжить диктовку или вставить.':'Нажмите на микрофон и говорите.'));
+ const has=!!$('#vText').value.trim();$('#vIns').disabled=!has||on;$('#vFix').disabled=!has||on;
+}
+function vTick(){if(!vOn)return;const s=Math.floor((Date.now()-vStart)/1000);$('#vTime').textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0');}
+async function vBegin(){
+ const c=vCfg();
+ if(c.engine==='whisper'){await vRecordStart();return;}
+ if(!SR){vUpd('Встроенное распознавание недоступно в этом окне. Нажмите микрофон на клавиатуре iPhone (она тоже распознаёт речь) или выберите сервис Whisper в настройках помощника.');return;}
+ try{
+  if(vRec){try{vRec.onresult=vRec.onend=vRec.onerror=null;vRec.abort&&vRec.abort();}catch(_){}}
+  const my=++vSess;
+  vRec=new SR();vRec.lang='ru-RU';vRec.continuous=true;vRec.interimResults=true;vRec.maxAlternatives=1;
+  const base=vFinal;let sessionFinal='';
+  vRec.onresult=e=>{if(my!==vSess)return;let fin='',intr='';for(let i=0;i<e.results.length;i++){const r=e.results[i];if(r.isFinal)fin+=r[0].transcript+' ';else intr+=r[0].transcript;}
+   sessionFinal=fin;vFinal=(base+' '+fin).trim();vInterim=intr;$('#vText').value=vText();const t=$('#vText');t.scrollTop=t.scrollHeight;vUpd();};
+  vRec.onerror=e=>{if(my!==vSess)return;const m={'not-allowed':'Нет доступа к микрофону. Разрешите его в настройках iPhone → Safari → Микрофон (или для приложения на экране «Домой»).','service-not-allowed':'Распознавание речи запрещено в этом окне. Попробуйте микрофон на клавиатуре iPhone.','no-speech':'Ничего не слышно. Нажмите на микрофон и говорите.','network':'Для распознавания нужен интернет.','audio-capture':'Не удалось включить микрофон.'}[e.error];
+   if(e.error==='no-speech'&&vOn)return;vOn=false;vUpd(m||('Ошибка распознавания: '+e.error));};
+  vRec.onend=()=>{if(my!==vSess)return;if(vOn){try{vFinal=(vFinal+' '+vInterim).trim();vInterim='';vRec.start();}catch(_){vOn=false;vUpd();}}else{vFinal=(vFinal+' '+vInterim).trim();vInterim='';$('#vText').value=vText();$('#vText').readOnly=false;vUpd();}};
+  vOn=true;vStart=Date.now();clearInterval(vTimer);vTimer=setInterval(vTick,500);vRec.start();vUpd();
+ }catch(e){vOn=false;vUpd('Не удалось запустить распознавание: '+(e.message||e));}
+}
+function vStop(){
+ if(!vOn)return;vOn=false;clearInterval(vTimer);
+ if(vRec){try{vRec.stop();}catch(_){} }
+ if(vMedia&&vMedia.state!=='inactive'){try{vMedia.stop();}catch(_){}}
+ vUpd();
+}
+async function vRecordStart(){
+ const c=vCfg();if(!c.base){vUpd('Укажите адрес сервиса Whisper в настройках помощника.');return;}
+ try{vStream=await navigator.mediaDevices.getUserMedia({audio:true});}catch(e){vUpd('Нет доступа к микрофону. Разрешите его в настройках iPhone.');return;}
+ const mime=['audio/mp4','audio/webm;codecs=opus','audio/webm'].find(m=>window.MediaRecorder&&MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(m))||'';
+ try{vMedia=new MediaRecorder(vStream,mime?{mimeType:mime}:undefined);}catch(e){vUpd('Запись звука не поддерживается в этом окне.');return;}
+ vChunks=[];vMedia.ondataavailable=e=>{if(e.data&&e.data.size)vChunks.push(e.data);};
+ vMedia.onstop=async()=>{vStream.getTracks().forEach(t=>t.stop());const type=vMedia.mimeType||mime||'audio/mp4';const blob=new Blob(vChunks,{type});vUpd('Распознаю речь…');
+  try{const t=await vWhisper(blob,type);vFinal=($('#vText').value+' '+t).trim();$('#vText').value=vText();$('#vText').readOnly=false;vUpd();}
+  catch(e){$('#vText').readOnly=false;vUpd(e&&e.code?aiErrText(e):('Не удалось распознать: '+(e.message||e)));}};
+ vOn=true;vStart=Date.now();clearInterval(vTimer);vTimer=setInterval(vTick,500);vMedia.start();vUpd();
+}
+async function vWhisper(blob,type){
+ const c=vCfg();if(!navigator.onLine)throw{code:'offline'};
+ const fd=new FormData();fd.append('file',blob,'dictation.'+(type.includes('webm')?'webm':'m4a'));fd.append('model',c.model);fd.append('language','ru');fd.append('response_format','json');
+ const h={};if(c.key)h.Authorization='Bearer '+c.key;
+ let res;try{res=await fetch(c.base+'/audio/transcriptions',{method:'POST',headers:h,body:fd});}catch(e){throw{code:'net'};}
+ if(!res.ok){let t='';try{t=await res.text();}catch(_){}let m=t;try{const j=JSON.parse(t);m=(j.error&&(j.error.message||j.error))||t;}catch(_){}throw{code:'http',status:res.status,msg:String(m).slice(0,200)};}
+ const j=await res.json();return(j.text||'').trim();
+}
+function vClose(){vStop();vPanel().hidden=true;document.body.classList.remove('voice-open');}
+function vInsert(text){
+ const t=(text||'').trim();if(!t)return;
+ if(!vSel||!prose.contains(vSel.startContainer)){toast('Не нашёл место для вставки. Поставьте курсор и попробуйте снова.');return;}
+ histRecord();prose.focus({preventScroll:true});const s=getSelection();s.removeAllRanges();s.addRange(vSel);
+ const ps=t.split(/\n+/).map(x=>x.trim()).filter(Boolean);
+ // add a space if we continue a sentence
+ const blk=blockOf(vSel.startContainer);let before='';try{const r=document.createRange();r.selectNodeContents(blk||prose);r.setEnd(vSel.startContainer,vSel.startOffset);before=r.toString();}catch(_){}
+ const lead=before&&!/[\s ]$/.test(before)?' ':'';
+ if(ps.length===1)document.execCommand('insertText',false,lead+ps[0]);
+ else{document.execCommand('insertText',false,lead+ps[0]);const cb=blockOf(getSelection().anchorNode);const nodes=ps.slice(1).map(p=>el('p',null,p));if(cb)cb.after(...nodes);else prose.append(...nodes);
+  try{const r=document.createRange();r.selectNodeContents(nodes[nodes.length-1]);r.collapse(false);const ss=getSelection();ss.removeAllRanges();ss.addRange(r);}catch(_){}}
+ onProse();histRecord();vClose();setTimeout(revealCaret,60);toast('Текст вставлен. Отменить можно кнопкой ↶',2500);
+}
+async function vFixAndInsert(){
+ const raw=$('#vText').value.trim();if(!raw)return;
+ $('#vFix').disabled=true;$('#vIns').disabled=true;vUpd('Нейросеть поправляет текст…');
+ try{
+  const out=await aiCall([{role:'system',content:aiSystem()+'\n\n'+aiContext({caretAt:null,chapter:false})},{role:'user',content:'Это надиктованный голосом текст для книги. Расставь знаки препинания, исправь ошибки распознавания речи и опечатки, раздели на абзацы, оформи прямую речь через тире по правилам русской типографики. Слова и смысл автора не меняй, ничего не добавляй. Верни только готовый текст.\n\n'+raw}],null,{temperature:.2});
+  const r=aiTakeMemory(out||'');$('#vText').value=r.text.replace(/\n\s*\n/g,'\n');vFinal=$('#vText').value;vUpd('Проверьте текст и нажмите «Вставить».');
+ }catch(e){vUpd(aiErrText(e));}
+ $('#vIns').disabled=false;$('#vFix').disabled=false;
+}
+function voiceSettingsBox(){
+ const c=vCfg();const seg=el('div',{class:'cf-seg',style:'grid-template-columns:1fr 1fr'});
+ const box=el('div',{class:'stack'});const base=el('input',{id:'vBase',type:'url',placeholder:'https://…/v1',value:c.base,spellcheck:'false'});
+ const key=el('input',{id:'vKey',type:'password',placeholder:'Ключ сервиса',value:c.key,spellcheck:'false',autocomplete:'off'});
+ const model=el('input',{id:'vModel',type:'text',value:c.model,spellcheck:'false'});
+ const wbox=el('div',{class:'stack',style:'display:flex;flex-direction:column;gap:10px'},el('label',{class:'fld'},el('span',{text:'Адрес сервиса Whisper'}),base),el('label',{class:'fld'},el('span',{text:'Ключ'}),key),el('label',{class:'fld'},el('span',{text:'Модель'}),model));
+ let eng=c.engine;const draw=()=>{seg.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.e===eng)));wbox.hidden=eng!=='whisper';};
+ [['phone','Встроенное в телефон'],['whisper','Whisper (сервис)']].forEach(([k,l])=>seg.append(el('button',{type:'button','data-e':k,text:l,onclick:()=>{eng=k;draw();}})));draw();
+ return{node:el('div',{class:'fld'},el('span',{text:'Распознавание речи'}),seg,el('div',{class:'fine',text:'Встроенное бесплатно и не требует ключа. Whisper точнее на длинных фрагментах, но нужен сервис с OpenAI-совместимым адресом /audio/transcriptions.'}),wbox),
+  save:()=>vSave({engine:eng,base:base.value.trim(),key:key.value.trim(),model:model.value.trim()||'whisper-large-v3-turbo'})};
+}
+
 /* ---------- help ---------- */
 const HELP=[
  ['Главы и части','<p>Нажмите <b>☰</b> слева вверху: откроется оглавление.</p><ul><li><b>+ Глава</b> и <b>+ Часть</b> добавляют главу или часть после текущей.</li><li><b>Порядок</b> показывает стрелки, чтобы переставлять главы, а также кнопки переименования и удаления.</li><li>Название главы можно править прямо на листе, крупный заголовок над текстом.</li><li>Цветная точка у главы показывает её статус, серая строка под названием это заметка к главе.</li></ul>'],
- ['Как писать и оформлять','<p>Нижняя панель:</p><ul><li><kbd>↶</kbd> <kbd>↷</kbd> отменить и повторить.</li><li><kbd>¶</kbd> обычный абзац, <kbd>Заг</kbd> подзаголовок, <kbd>⁂</kbd> разрыв сцены.</li><li><kbd>Ж</kbd> жирный, <kbd>К</kbd> курсив. Кнопка горит, когда оформление включено.</li><li>Облачко ставит <b>заметку на полях</b>: выделите фразу и нажмите его. Заметка подсветится жёлтым, нажатие на неё открывает текст. В PDF, Word и EPUB заметки не попадают.</li><li>Картинка вставляет фото из галереи, подпись пишется под ним.</li><li><kbd>✓</kbd> прячет клавиатуру.</li></ul><p>Пока открыта клавиатура, панель стоит вверху экрана. Если вы ушли листанием далеко от курсора, любая кнопка панели вернёт к нему.</p><p>При наборе приложение само ставит <b>тире</b> («- » в начале абзаца и « - » между словами), <b>«ёлочки»</b> вместо прямых кавычек и <b>«…»</b> вместо трёх точек.</p>'],
+ ['Как писать и оформлять','<p>Нижняя панель:</p><ul><li><kbd>↶</kbd> <kbd>↷</kbd> отменить и повторить.</li><li><kbd>¶</kbd> обычный абзац, <kbd>Заг</kbd> подзаголовок, <kbd>⁂</kbd> разрыв сцены.</li><li><kbd>Ж</kbd> жирный, <kbd>К</kbd> курсив. Кнопка горит, когда оформление включено.</li><li>Облачко ставит <b>заметку на полях</b>: выделите фразу и нажмите его. Заметка подсветится жёлтым, нажатие на неё открывает текст. В PDF, Word и EPUB заметки не попадают.</li><li>Микрофон включает <b>диктовку</b>: говорите, текст появляется в окне. «Новый абзац», «запятая», «точка», «вопросительный знак», «открыть/закрыть кавычки» работают как команды. Кнопка <b>✦ Поправить</b> просит нейросеть расставить знаки, исправить ошибки распознавания и оформить диалоги, затем <b>Вставить</b> ставит текст в место курсора.</li><li>Картинка вставляет фото из галереи, подпись пишется под ним.</li><li><kbd>✓</kbd> прячет клавиатуру.</li></ul><p>Пока открыта клавиатура, панель стоит вверху экрана. Если вы ушли листанием далеко от курсора, любая кнопка панели вернёт к нему.</p><p>При наборе приложение само ставит <b>тире</b> («- » в начале абзаца и « - » между словами), <b>«ёлочки»</b> вместо прямых кавычек и <b>«…»</b> вместо трёх точек.</p>'],
  ['Верхняя панель и поиск','<p>Верхняя панель прячется, когда вы листаете текст вниз или пишете, и появляется, если чуть потянуть текст вверх.</p><ul><li><b>Название вверху</b> открывает список всех книг.</li><li><b>Лупа</b> ищет пару слов по всей книге, «е» и «ё» считаются одинаковыми. Нажмите на результат, и откроется нужное место.</li><li><b>Заменить…</b> под строкой поиска меняет слово во всей книге, например имя героя. Перед заменой сохраняется версия каждой главы.</li><li><b>✦</b> открывает помощника-нейросеть. Режим без отвлечений включается в меню ⋯, выход значком в правом верхнем углу.</li><li><b>Книжка</b> показывает вёрстку и сохраняет PDF.</li><li><b>⋯</b> открывает название, обложки, экспорт, копии и настройки.</li></ul>'],
  ['Под текстом главы','<p>Пролистайте главу до конца:</p><ul><li>сколько слов в главе и сколько написано сегодня, <b>цель на день</b>;</li><li><b>статус</b>: черновик, правка или готово;</li><li><b>заметка к главе</b>: о чём она и что доделать, в книгу не попадает;</li><li><b>Версии</b>: состояние главы по дням, любую версию можно посмотреть и вернуть;</li><li><b>Разделить главу</b> в месте курсора и <b>Объединить со следующей</b>.</li></ul>'],
  ['Герои и события','<p>В оглавлении есть вкладки <b>Герои</b> и <b>События</b>.</p><ul><li>Герой: фото, имя, возраст, внешность и характер.</li><li>Событие: название, описание, глава и участники. События идут в порядке глав.</li></ul>'],
@@ -1991,6 +2134,11 @@ function openHelp(){
 $('#helpBtn').onclick=openHelp;
 
 $('#aiBtn').onclick=openAI;
+$('#vMic').onclick=()=>{if(vOn)vStop();else{$('#vText').readOnly=true;vFinal=$('#vText').value;vBegin();}};
+$('#vClose').onclick=vClose;
+$('#vIns').onclick=()=>vInsert($('#vText').value);
+$('#vFix').onclick=vFixAndInsert;
+$('#vText').addEventListener('input',()=>{vFinal=$('#vText').value;vUpd();});
 $('#aiClose').onclick=closeAI;
 $('#aiSet').onclick=()=>aiSettings(false);
 $('#aiMemBtn').onclick=aiMemory;
@@ -2013,7 +2161,7 @@ load().then(async()=>{await purgeOldTrash();renderAll();renderFoot();setTimeout(
 if('serviceWorker' in navigator&&location.protocol.startsWith('http')){
   navigator.serviceWorker.register('sw.js').catch(()=>{});
   navigator.serviceWorker.ready.then(async()=>{
-    try{const c=await caches.open('kniga-v10');if(!(await c.match('index.html')))return;
+    try{const c=await caches.open('kniga-v11');if(!(await c.match('index.html')))return;
       if(localStorage.getItem('kp:offline')==='2')return;localStorage.setItem('kp:offline','2');}catch(e){return;}
     const d=document.createElement('div');d.className='toast';d.setAttribute('role','status');
     d.textContent='Готово: теперь приложение открывается и без интернета';document.body.append(d);setTimeout(()=>d.remove(),4500);

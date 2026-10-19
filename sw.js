@@ -1,5 +1,5 @@
 // Offline cache: after one launch with internet the app opens without it.
-const CACHE='kniga-v10';
+const CACHE='kniga-v11';
 const SHELL=['./','index.html','manifest.webmanifest','icon-180.png','icon-192.png','icon-512.png'];
 const LIBS=['https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
             'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
