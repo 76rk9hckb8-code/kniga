@@ -1674,7 +1674,7 @@ const AI_PROV={
  custom:{name:'Другой сервис',base:'',model:'',keyUrl:'',hint:'Любой сервис с OpenAI-совместимым API: укажите адрес и название модели.'}
 };
 function aiCfg(){let c={};try{c=JSON.parse(localStorage.getItem('kp:ai')||'{}')}catch(e){}c.prov=c.prov||'openrouter';const p=AI_PROV[c.prov]||AI_PROV.openrouter;
- return{prov:c.prov,key:c.key||'',base:(c.base||p.base||'').replace(/\/+$/,''),model:c.model||p.model,keys:c.keys||{}};}
+ return{prov:c.prov,key:c.key||'',base:(c.base||p.base||'').replace(/\/+$/,''),model:c.model||p.model,keys:c.keys||{},nostream:!!c.nostream};}
 function aiSaveCfg(c){try{localStorage.setItem('kp:ai',JSON.stringify(c));}catch(e){toast('Не удалось сохранить настройки помощника');}}
 
 let aiData={bookId:null,mem:'',chat:[],sums:{}};
@@ -1723,23 +1723,46 @@ async function aiCall(messages,onDelta,opts={}){
  if(!c.key&&c.prov!=='custom')throw{code:'nokey'};
  if(!c.base||!c.model)throw{code:'nocfg'};
  if(!navigator.onLine)throw{code:'offline'};
- aiAbort=new AbortController();
+ aiAbort=new AbortController();const signal=aiAbort.signal;
  const headers={'Content-Type':'application/json'};if(c.key)headers.Authorization='Bearer '+c.key;
- if(c.prov==='openrouter'){headers['HTTP-Referer']=location.origin+location.pathname;headers['X-Title']='Kniga writer';}
- const body={model:c.model,messages,temperature:opts.temperature??0.7,stream:!!onDelta};
- let res;
- try{res=await fetch(c.base+'/chat/completions',{method:'POST',headers,body:JSON.stringify(body),signal:aiAbort.signal});}
- catch(e){if(e&&e.name==='AbortError')throw{code:'abort'};throw{code:'net',msg:String(e&&e.message||e)};}
- if(!res.ok){let t='';try{t=await res.text();}catch(_){}let m=t;try{const j=JSON.parse(t);m=(j.error&&(j.error.message||j.error))||j.message||t;}catch(_){}throw{code:'http',status:res.status,msg:String(m).slice(0,300)};}
- if(!onDelta||!res.body||!res.body.getReader){const j=await res.json();const t=((j.choices||[])[0]||{}).message;return(t&&t.content)||'';}
- const rd=res.body.getReader();const dec=new TextDecoder();let buf='',out='';
+ if(c.prov==='openrouter'){headers['HTTP-Referer']='https://76rk9hckb8-code.github.io/kniga/';headers['X-Title']='Kniga writer';}
+ const isAbort=e=>e&&(e.name==='AbortError'||signal.aborted);
+ async function post(stream){
+  let res;
+  try{res=await fetch(c.base+'/chat/completions',{method:'POST',headers,body:JSON.stringify({model:c.model,messages,temperature:opts.temperature??0.7,stream}),signal,cache:'no-store'});}
+  catch(e){if(isAbort(e))throw{code:'abort'};throw{code:'net',msg:String(e&&e.message||e)};}
+  if(!res.ok){let t='';try{t=await res.text();}catch(_){}let m=t;try{const j=JSON.parse(t);m=(j.error&&(j.error.message||j.error))||j.message||t;}catch(_){}throw{code:'http',status:res.status,msg:String(m).slice(0,300)};}
+  return res;
+ }
+ async function plain(){
+  const res=await post(false);let j;
+  try{j=await res.json();}catch(e){if(isAbort(e))throw{code:'abort'};throw{code:'net',msg:String(e&&e.message||e)};}
+  if(j&&j.error)throw{code:'http',status:j.error.code||0,msg:j.error.message||'ошибка сервиса'};
+  const m=((j.choices||[])[0]||{}).message||{};return m.content||'';
+ }
+ if(!onDelta||c.nostream){const t=await plain();if(onDelta&&t)onDelta(t);return t;}
+ // streaming first; if Safari drops the stream, repeat once without streaming
+ let out='';
  try{
+  const res=await post(true);
+  if(!res.body||!res.body.getReader){const j=await res.json();const t=((((j.choices||[])[0]||{}).message)||{}).content||'';onDelta(t);return t;}
+  const rd=res.body.getReader();const dec=new TextDecoder();let buf='';
   while(true){const {done,value}=await rd.read();if(done)break;buf+=dec.decode(value,{stream:true});
    let i;while((i=buf.indexOf('\n'))>=0){const line=buf.slice(0,i).trim();buf=buf.slice(i+1);
     if(!line.startsWith('data:'))continue;const data=line.slice(5).trim();if(data==='[DONE]')continue;
-    try{const j=JSON.parse(data);if(j.error)throw{code:'http',status:0,msg:j.error.message||'ошибка сервиса'};const d=((j.choices||[])[0]||{}).delta||{};if(d.content){out+=d.content;onDelta(out);}}catch(err){if(err&&err.code)throw err;}}}
- }catch(e){if(e&&e.name==='AbortError')throw{code:'abort',partial:out};throw e;}
- return out;
+    let j=null;try{j=JSON.parse(data);}catch(_){continue;}
+    if(j.error)throw{code:'http',status:j.error.code||0,msg:j.error.message||'ошибка сервиса'};
+    const d=((j.choices||[])[0]||{}).delta||{};if(d.content){out+=d.content;onDelta(out);}}}
+  return out;
+ }catch(e){
+  if(isAbort(e))throw{code:'abort',partial:out};
+  if(e&&e.code==='http')throw e;
+  if(out)throw{code:'cut',partial:out};
+  // nothing received: try the ordinary request
+  const t=await plain();
+  try{const cc=JSON.parse(localStorage.getItem('kp:ai')||'{}');cc.nostream=true;localStorage.setItem('kp:ai',JSON.stringify(cc));}catch(_){}
+  if(t)onDelta(t);return t;
+ }
 }
 function aiErrText(e){
  if(!e)return'Неизвестная ошибка.';
@@ -1748,7 +1771,8 @@ function aiErrText(e){
   case'nocfg':return'В настройках помощника не указан адрес сервиса или модель.';
   case'offline':return'Нет интернета. Помощнику нужен интернет, остальное приложение работает и без него.';
   case'abort':return'Остановлено.';
-  case'net':return'Не удалось связаться с сервисом. Проверьте интернет. Если интернет есть, возможно, этот сервис недоступен из вашей сети или не принимает запросы из приложения: попробуйте другой сервис в настройках.';
+  case'cut':return'Связь с сервисом прервалась посреди ответа. Выше то, что успело прийти. Попробуйте ещё раз.';
+  case'net':return'Не удалось связаться с сервисом'+(e.msg?' ('+e.msg+')':'')+'. Проверьте интернет. Если интернет есть, возможно, этот сервис недоступен из вашей сети или не принимает запросы из приложения: попробуйте другой сервис в настройках.';
   case'http':
    if(e.status===401||e.status===403)return'Сервис не принял ключ доступа ('+e.status+'). Проверьте ключ в настройках.';
    if(e.status===402)return'На счёте сервиса закончились деньги или бесплатный лимит (402). Пополните баланс или выберите бесплатный OpenRouter.';
@@ -1756,6 +1780,7 @@ function aiErrText(e){
    if(e.status===404)return'Сервис не нашёл модель (404). Проверьте название модели в настройках.';
    return'Сервис ответил ошибкой '+(e.status||'')+': '+(e.msg||'без описания');
  }
+ if(e instanceof Error||/load failed|failed to fetch|network/i.test(String(e)))return aiErrText({code:'net',msg:String(e.message||e)});
  return String(e.msg||e);
 }
 
@@ -1846,7 +1871,7 @@ async function aiSend(prompt,o={}){
   let last=0;
   const txt=await aiCall(msgs,t=>{bot.t=t;const now=Date.now();if(now-last>80){last=now;aiPatchLast();}},{temperature:o.temp});
   const r=aiTakeMemory(txt||'');bot.t=r.text||'(пустой ответ)';bot.saved=r.saved;
- }catch(e){bot.err=true;bot.t=(e&&e.partial?e.partial+'\n\n':'')+aiErrText(e);if(e&&e.code==='abort'&&e.partial){bot.err=false;bot.t=e.partial;}}
+ }catch(e){bot.err=true;bot.t=(e&&e.partial?e.partial+'\n\n':'')+aiErrText(e);if(e&&(e.code==='abort'||e.code==='cut')&&e.partial){bot.err=false;bot.t=e.partial+(e.code==='cut'?'\n\n(связь прервалась, ответ может быть неполным)':'');}}
  bot.pending=false;aiBusy=false;aiStore();aiRender();aiUpdBusy();aiScroll();
 }
 function aiNote(t){aiData.chat.push({r:'bot',t,err:true,ts:Date.now(),local:true});aiRender();aiScroll();}
@@ -1995,7 +2020,9 @@ function aiSettings(firstTime){
   result,
   vbox.node
  ],[
-  {label:'Проверить',ghost:true,fn:async()=>{save();result.textContent='Проверяю…';try{const t=await aiCall([{role:'user',content:'Ответь одним словом: работает?'}],null,{temperature:0});result.textContent='Работает. Ответ сервиса: «'+t.trim().slice(0,60)+'»';}catch(e){result.textContent=aiErrText(e);}}},
+  {label:'Проверить',ghost:true,fn:async()=>{save();result.textContent='Проверяю…';try{const t=await aiCall([{role:'user',content:'Ответь одним словом: работает?'}],null,{temperature:0});result.textContent='Обычный запрос работает: «'+t.trim().slice(0,40)+'». Проверяю потоковый ответ…';
+   try{const cc=JSON.parse(localStorage.getItem('kp:ai')||'{}');delete cc.nostream;localStorage.setItem('kp:ai',JSON.stringify(cc));}catch(_){}
+   let got='';await aiCall([{role:'user',content:'Посчитай от одного до пяти словами.'}],x=>{got=x;},{temperature:0});result.textContent='Работает. '+(aiCfg().nostream?'Ответы будут приходить целиком (потоковый режим в этой сети не работает).':'Ответы будут появляться по мере написания.');}catch(e){result.textContent=aiErrText(e);}}},
   {label:'Сохранить',primary:true,fn:()=>{save();closeModal();toast('Настройки помощника сохранены');}}]);
  setTimeout(()=>{if(!key.value)key.focus();},120);
 }
@@ -2175,7 +2202,7 @@ load().then(async()=>{await purgeOldTrash();renderAll();renderFoot();setTimeout(
 if('serviceWorker' in navigator&&location.protocol.startsWith('http')){
   navigator.serviceWorker.register('sw.js').catch(()=>{});
   navigator.serviceWorker.ready.then(async()=>{
-    try{const c=await caches.open('kniga-v12');if(!(await c.match('index.html')))return;
+    try{const c=await caches.open('kniga-v13');if(!(await c.match('index.html')))return;
       if(localStorage.getItem('kp:offline')==='2')return;localStorage.setItem('kp:offline','2');}catch(e){return;}
     const d=document.createElement('div');d.className='toast';d.setAttribute('role','status');
     d.textContent='Готово: теперь приложение открывается и без интернета';document.body.append(d);setTimeout(()=>d.remove(),4500);
