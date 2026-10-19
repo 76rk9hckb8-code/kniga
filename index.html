@@ -255,6 +255,44 @@ body.kb main{padding-bottom:45vh}
 .toc-r.ch{padding-left:14px}
 
 
+
+/* ---------- AI helper ---------- */
+.ai-top{color:var(--accent)}
+.ai{position:fixed;left:0;right:0;top:0;height:100%;z-index:75;background:var(--desk);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px)}
+@media (min-width:960px){.ai{left:auto;width:440px;border-left:1px solid var(--line);box-shadow:-10px 0 40px rgba(0,0,0,.12)}}
+.ai-h{display:flex;align-items:center;gap:6px;padding:6px max(8px,env(safe-area-inset-right,0px)) 6px max(8px,env(safe-area-inset-left,0px));border-bottom:1px solid var(--desk-2);background:var(--desk)}
+.ai-ht{flex:1;min-width:0;line-height:1.2}
+.ai-ht b{display:block;font-family:var(--font-display);font-size:20px;font-weight:600}
+.ai-ht span{display:block;font-size:11.5px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ai-log{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px max(12px,env(safe-area-inset-right,0px)) 10px max(12px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:10px;overscroll-behavior:contain}
+.ai-empty{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:14px 16px;font-size:14px;line-height:1.5;color:var(--ink-2)}
+.ai-empty b{display:block;font-family:var(--font-display);font-size:19px;color:var(--ink);margin-bottom:6px}
+.ai-empty p{margin:0 0 8px}
+.ai-msg{display:flex;flex-direction:column;gap:6px;max-width:100%}
+.ai-msg.me{align-items:flex-end}
+.ai-msg.me .ai-b{background:var(--accent);color:var(--on-accent);border-radius:16px 16px 4px 16px;max-width:85%;white-space:pre-wrap;font-size:14.5px;padding:9px 13px}
+.ai-msg.bot .ai-b{background:var(--paper);border:1px solid var(--line);border-radius:16px 16px 16px 4px;padding:10px 14px;font-family:var(--font-book);font-size:15px;line-height:1.55;overflow-wrap:break-word}
+.ai-b p{margin:0 0 .6em}.ai-b p:last-child{margin-bottom:0}.ai-b ul,.ai-b ol{margin:0 0 .6em;padding-left:1.2em}.ai-b li{margin-bottom:.25em}
+.ai-b.err{border-color:var(--danger)!important;color:var(--danger);font-family:var(--font-ui);font-size:14px}
+.ai-saved{font-size:12px;color:var(--ok);padding-left:6px}
+.ai-acts{display:flex;gap:6px;flex-wrap:wrap}
+.ai-more{align-self:flex-start;font-size:12.5px;color:var(--ink-3);padding:2px 6px}
+.ai-acts .btn{padding:7px 12px;font-size:13.5px;border-radius:10px}
+.ai-dots{display:inline-flex;gap:4px}.ai-dots i{width:6px;height:6px;border-radius:50%;background:var(--ink-3);animation:aid 1s infinite}
+.ai-dots i:nth-child(2){animation-delay:.15s}.ai-dots i:nth-child(3){animation-delay:.3s}
+@keyframes aid{0%,80%,100%{opacity:.25}40%{opacity:1}}
+.ai-foot{border-top:1px solid var(--desk-2);background:var(--paper);padding:8px max(10px,env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) max(10px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:8px}
+body.kb .ai-foot,.ai-foot:focus-within{padding-bottom:8px}
+.ai-chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 -2px;padding:0 2px}
+.ai-chips::-webkit-scrollbar{display:none}
+.ai-chips button{flex:none;padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:var(--field);font-size:13.5px;color:var(--ink);white-space:nowrap}
+.ai-chips button:disabled{opacity:.45}
+.ai-in{display:flex;gap:8px;align-items:flex-end}
+.ai-in textarea{flex:1;min-width:0;resize:none;font:inherit;font-size:16px;line-height:1.35;padding:9px 12px;border-radius:18px;border:1px solid var(--line);background:var(--field);color:var(--ink);max-height:140px}
+.ai-send{width:40px;height:40px;border-radius:50%;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;flex:none}
+.ai-send .ico{width:20px;height:20px}
+body.ai-open .bar,body.ai-open .top{visibility:hidden}
+@media (prefers-reduced-motion:reduce){.ai-dots i{animation:none}}
 /* ---------- writer tools ---------- */
 .help-btn{display:flex;align-items:center;gap:6px;margin:0 16px;padding:8px 0;font-size:13px;color:var(--ink-2);border-bottom:1px solid var(--line);width:calc(100% - 32px)}
 .help-btn .ico{width:18px;height:18px;color:var(--accent)}
@@ -341,7 +379,7 @@ body.focus .side,body.focus .scrim{display:none}
     <button class="ibtn" id="menuBtn" aria-label="Оглавление"><svg class="ico" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/></svg></button>
     <div class="top-title"><small><span id="topSmall">Книга</span><span id="saveSt"></span></small><b id="topTitle">—</b></div>
     <button class="ibtn" id="searchBtn" aria-label="Поиск"><svg class="ico" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/></svg></button>
-    <button class="ibtn" id="focusBtn" aria-label="Режим без отвлечений"><svg class="ico" viewBox="0 0 24 24"><path d="M4 9V5h4M20 9V5h-4M4 15v4h4M20 15v4h-4"/></svg></button>
+    <button class="ibtn ai-top" id="aiBtn" aria-label="Помощник"><svg class="ico" viewBox="0 0 24 24"><path d="M12 3.5l1.7 4.6 4.6 1.7-4.6 1.7L12 16.1l-1.7-4.6L5.7 9.8l4.6-1.7Z"/><path d="M18.5 14.5l.8 2.1 2.1.8-2.1.8-.8 2.1-.8-2.1-2.1-.8 2.1-.8Z"/></svg></button>
     <button class="ibtn" id="prevBtn" aria-label="Вёрстка и PDF"><svg class="ico" viewBox="0 0 24 24"><path d="M12 6.5C10 5 7 4.5 3.5 5v13c3.5-.5 6.5 0 8.5 1.5 2-1.5 5-2 8.5-1.5V5c-3.5-.5-6.5 0-8.5 1.5Z"/><path d="M12 6.5v13"/></svg></button>
     <button class="ibtn" id="bookBtn" aria-label="Книга и обложки"><svg class="ico" viewBox="0 0 24 24"><circle cx="5.5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="18.5" cy="12" r="1.2"/></svg></button>
   </div>
@@ -421,6 +459,19 @@ body.focus .side,body.focus .scrim{display:none}
   <div class="prev-b" id="prevBody"></div>
 </section>
 
+<section class="ai" id="ai" hidden role="dialog" aria-label="Помощник">
+  <div class="ai-h">
+    <button class="ibtn" id="aiClose" aria-label="Закрыть помощника"><svg class="ico" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>
+    <div class="ai-ht"><b>Помощник</b><span id="aiTarget"></span></div>
+    <button class="chip" id="aiMemBtn" type="button">Память</button>
+    <button class="ibtn" id="aiSet" aria-label="Настройки помощника"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg></button>
+  </div>
+  <div class="ai-log" id="aiLog"></div>
+  <div class="ai-foot">
+    <div class="ai-chips" id="aiChips"></div>
+    <div class="ai-in"><textarea id="aiIn" rows="1" placeholder="Напишите помощнику…" enterkeyhint="send"></textarea><button class="ai-send" id="aiSend" aria-label="Отправить"></button></div>
+  </div>
+</section>
 <div class="busy" id="busy" hidden><div><b id="busyT">Верстаю книгу</b><span id="busyS"></span></div></div>
 <div id="measure"></div>
 <div id="pdfHost"></div>
@@ -550,7 +601,7 @@ async function switchBook(id,initial){
  let meta=await Store.get('meta:'+id);
  if(!meta||!Array.isArray(meta.items))meta={v:1,title:'Без названия',author:'',front:null,back:null,backText:'',items:[],characters:[],events:[]};
  for(const it of meta.items)if(it.t==='ch'){html[it.id]=(await Store.get('ch:'+it.id))||'<p><br></p>';}
- book=meta;book.characters=book.characters||[];book.events=book.events||[];bookId=id;
+ book=meta;book.characters=book.characters||[];book.events=book.events||[];bookId=id;aiLoad(id);
  for(const cid in html)wc[cid]=countWords(html[cid]);
  lib.current=id;Store.set('library',lib);
  let last=null;try{last=localStorage.getItem('kp:last:'+id)}catch(e){}
@@ -908,7 +959,7 @@ function bookSettings(){
   el('div',{class:'cover-row'},slot('front','Обложка в начале'),slot('back','Обложка в конце')),
   el('label',{class:'fld'},el('span',{text:'Текст на задней обложке'}),bt),
   el('div',{class:'fine',text:'Формат страницы: 125 × 200 мм, как у романа в мягкой обложке. Для обложки подойдёт вертикальная картинка с пропорцией примерно 5 : 8.'}),
-  el('button',{class:'btn ghost',type:'button',style:'align-self:flex-start',text:'Как пользоваться приложением',onclick:()=>{closeModal();openHelp();}}),
+  el('div',{style:'display:flex;gap:8px;flex-wrap:wrap'},el('button',{class:'btn ghost',type:'button',text:'Как пользоваться',onclick:()=>{closeModal();openHelp();}}),el('button',{class:'btn ghost',type:'button',text:'Режим без отвлечений',onclick:()=>{closeModal();toggleFocus(true);}}),el('button',{class:'btn ghost',type:'button',text:'Помощник: настройки',onclick:()=>{closeModal();aiSettings(false);}})),
   editorSettingsBox(),
   el('div',{class:'fld'},el('span',{text:'Экспорт книги'}),el('div',{class:'export-row'},el('button',{class:'btn ghost',type:'button',text:'Word (.docx)',onclick:()=>{closeModal();exportDocx();}}),el('button',{class:'btn ghost',type:'button',text:'EPUB',onclick:()=>{closeModal();exportEpub();}}),el('button',{class:'btn ghost',type:'button',text:'PDF',onclick:()=>{closeModal();openPreview();}})),el('div',{class:'fine',text:'Word подойдёт для редактора и издательства, EPUB для электронных читалок. Заметки на полях в файлы не попадают.'})),
   el('div',{class:'fld'},el('span',{text:'Резервная копия'}),el('div',{class:'fine',text:backupLine()}),
@@ -919,7 +970,7 @@ function bookSettings(){
   el('button',{class:'btn ghost',type:'button',style:'align-self:flex-start',text:'Все книги и новая книга',onclick:()=>{closeModal();openLibrary();}})
  ],[{label:'Сохранить',primary:true,fn:()=>{book.title=ti.value.trim();book.author=au.value.trim();book.front=d.front;book.back=d.back;book.backText=bt.value;book.sample=false;saveMeta();renderAll();if(cur)renderChapterHead();else showEmpty();closeModal();toast('Сохранено');}}]);
 }
-function fullBook(){if(cur)html[cur]=prose.innerHTML;return{app:'kniga-pisatelya',v:1,savedAt:new Date().toISOString(),meta:book,chapters:html};}
+function fullBook(){if(cur)html[cur]=prose.innerHTML;return{app:'kniga-pisatelya',v:1,savedAt:new Date().toISOString(),meta:book,chapters:html,ai:aiData.bookId===bookId?{mem:aiData.mem,sums:aiData.sums}:undefined};}
 function safeName(s){return (s||'Книга').replace(/[\\/:*?"<>|]+/g,' ').replace(/\s+/g,' ').trim().slice(0,80)||'Книга';}
 async function exportJson(){
  const d=new Date();const stamp=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
@@ -934,7 +985,8 @@ $('#fileJson').addEventListener('change',async e=>{
   const m=data.meta;const map={};
   for(const it of m.items){const nid=uid();map[it.id]=nid;if(it.t==='ch')await Store.set('ch:'+nid,(data.chapters||{})[it.id]||'<p><br></p>');it.id=nid;}
   (m.events||[]).forEach(ev=>{if(ev.chapterId)ev.chapterId=map[ev.chapterId]||null;});
-  const id=uid();await Store.set('meta:'+id,m);lib.books.push({id,title:m.title||'',author:m.author||'',updated:new Date().toISOString()});await Store.set('library',lib);
+  const id=uid();if(data.ai){const sums={};for(const k in (data.ai.sums||{}))if(map[k])sums[map[k]]=data.ai.sums[k];await Store.set('ai:'+id,{mem:data.ai.mem||'',chat:[],sums});}
+  await Store.set('meta:'+id,m);lib.books.push({id,title:m.title||'',author:m.author||'',updated:new Date().toISOString()});await Store.set('library',lib);
   closeModal();await switchBook(id);toast('Книга добавлена из копии');
  }catch(err){toast('Это не файл копии книги. Выберите файл .json, сохранённый из этого приложения.',4000);}
 });
@@ -1117,8 +1169,10 @@ function revealCaret(){
 // Header: hidden while the keyboard is open or while scrolling down through the text;
 // any upward swipe (keyboard closed) or reaching the top brings it back.
 const topEl=document.querySelector('.top');let lastY=window.scrollY;
+const topSince=Date.now();
 function updTop(){
  const y=window.scrollY,dy=y-lastY;lastY=y;
+ if(Date.now()-topSince<1200)return;
  if(kbOpen){topEl.classList.add('hid');return;}
  if(y<60||dy<-6)topEl.classList.remove('hid');
  else if(dy>6)topEl.classList.add('hid');
@@ -1142,7 +1196,7 @@ for(const t of [prose,titleEl]){
 
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')flushAll();});
 addEventListener('pagehide',flushAll);
-document.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='f'){e.preventDefault();openDrawer('find');setTimeout(()=>$('#q').focus(),60);}if(e.key==='Escape'){if(!modal.hidden)closeModal();else closeDrawer();}});
+document.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='f'){e.preventDefault();openDrawer('find');setTimeout(()=>$('#q').focus(),60);}if(e.key==='Escape'){if(!modal.hidden)closeModal();else if(!$('#ai').hidden)closeAI();else closeDrawer();}});
 
 /* ======================================================================
    Writer tools: undo/redo, trash, versions, save status, backup nudges,
@@ -1262,6 +1316,7 @@ function openChapterTrash(){
  openModal('Корзина глав',[box,el('div',{class:'fine',text:'Удалённые главы хранятся 30 дней, потом исчезают сами.'})],[{label:'Закрыть',ghost:true,fn:closeModal}]);
 }
 async function purgeBook(id){
+ await Store.del('ai:'+id);
  const meta=await Store.get('meta:'+id);
  if(meta&&Array.isArray(meta.items))for(const it of meta.items)if(it.t==='ch'){await Store.del('ch:'+it.id);await Store.del('snap:'+it.id);}
  if(meta&&meta.trash)for(const t of meta.trash){await Store.del('ch:'+t.id);await Store.del('snap:'+t.id);}
@@ -1573,17 +1628,360 @@ async function exportEpub(){
  }catch(e){setBusy(null);toast('Не получилось собрать EPUB: '+(e&&e.message||'ошибка'),5000);}
 }
 
+/* ======================================================================
+   AI helper: OpenAI-compatible chat (DeepSeek, OpenRouter free, custom).
+   Per-book memory, chat history and chapter summaries live on the device;
+   the API key lives only in this browser's localStorage.
+   ====================================================================== */
+const AI_PROV={
+ openrouter:{name:'OpenRouter (бесплатно)',base:'https://openrouter.ai/api/v1',model:'openrouter/free',keyUrl:'https://openrouter.ai/keys',hint:'Бесплатно: около 200 запросов в день. Ключ создаётся на openrouter.ai → Keys, карта не нужна.'},
+ deepseek:{name:'DeepSeek',base:'https://api.deepseek.com',model:'deepseek-flash',keyUrl:'https://platform.deepseek.com/api_keys',hint:'Платно, но очень дёшево: глава обходится в доли цента. Ключ: platform.deepseek.com → API keys, баланс пополняется там же.'},
+ custom:{name:'Другой сервис',base:'',model:'',keyUrl:'',hint:'Любой сервис с OpenAI-совместимым API: укажите адрес и название модели.'}
+};
+function aiCfg(){let c={};try{c=JSON.parse(localStorage.getItem('kp:ai')||'{}')}catch(e){}c.prov=c.prov||'openrouter';const p=AI_PROV[c.prov]||AI_PROV.openrouter;
+ return{prov:c.prov,key:c.key||'',base:(c.base||p.base||'').replace(/\/+$/,''),model:c.model||p.model,keys:c.keys||{}};}
+function aiSaveCfg(c){try{localStorage.setItem('kp:ai',JSON.stringify(c));}catch(e){toast('Не удалось сохранить настройки помощника');}}
+
+let aiData={bookId:null,mem:'',chat:[],sums:{}};
+async function aiLoad(id){const d=(await Store.get('ai:'+id))||{};aiData={bookId:id,mem:d.mem||'',chat:Array.isArray(d.chat)?d.chat:[],sums:d.sums||{}};if(!$('#ai').hidden)aiRender();}
+function aiStore(){if(aiData.bookId)Store.set('ai:'+aiData.bookId,{mem:aiData.mem,chat:aiData.chat.slice(-60),sums:aiData.sums});}
+function hashStr(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return(h>>>0).toString(36);}
+const plainOf=h=>textMap(parse(h)).text.replace(/\n{2,}/g,'\n').trim();
+
+/* ---------- context sent with every request ---------- */
+function aiSystem(){
+ return['Ты — опытный литературный редактор и соавтор. Помогаешь автору писать книгу на русском языке.',
+ 'Правила:',
+ '— Отвечай по-русски, коротко и по делу, без лишних вступлений и похвалы.',
+ '— Соблюдай русскую типографику: тире «—», кавычки «ёлочки», многоточие «…», диалоги через тире.',
+ '— Сохраняй голос, стиль, время и лицо повествования автора. Не меняй факты сюжета без просьбы.',
+ '— Если просят исправить, переписать, сократить или продолжить текст, отвечай ТОЛЬКО готовым текстом, без пояснений, кавычек и заголовков. Абзацы разделяй пустой строкой.',
+ '— Если просят совет, разбор или идеи, отвечай списком из коротких пунктов.',
+ '— Опирайся на память книги, карточки героев, события и план глав ниже. Не противоречь им; если видишь противоречие в тексте автора, укажи на него.',
+ '— Если автор просит что-то запомнить или сообщает устойчивое правило о книге, стиле, героях или мире, добавь в самом конце ответа отдельные строки вида «ЗАПОМНИТЬ: факт». Каждый факт — одной строкой. В остальных случаях эти строки не пиши.'].join('\n');
+}
+function aiContext(opt){
+ const parts=[];
+ parts.push('КНИГА: «'+(book.title||'Без названия')+'»'+(book.author?', автор '+book.author:''));
+ if(aiData.mem.trim())parts.push('ПАМЯТЬ КНИГИ (правила и факты от автора):\n'+aiData.mem.trim());
+ if(book.characters.length)parts.push('ГЕРОИ:\n'+book.characters.map(c=>'• '+(c.name||'Без имени')+(c.age?', '+c.age+' '+plural(+c.age||0,'год','года','лет'):'')+(c.looks?'. Внешность: '+c.looks:'')+(c.traits?'. Характер: '+c.traits:'')).join('\n').slice(0,6000));
+ if(book.events.length)parts.push('ВАЖНЫЕ СОБЫТИЯ:\n'+[...book.events].sort((a,b)=>chapterOrder(a.chapterId)-chapterOrder(b.chapterId)).map(e=>'• '+(e.chapterId&&item(e.chapterId)?'[гл. '+chNum(e.chapterId)+'] ':'')+(e.title||'')+(e.desc?': '+e.desc:'')+((e.charIds||[]).length?' (участвуют: '+e.charIds.map(id=>(book.characters.find(c=>c.id===id)||{}).name).filter(Boolean).join(', ')+')':'')).join('\n').slice(0,5000));
+ const plan=[];
+ for(const it of book.items){
+  if(it.t==='part'){plan.push(partLabel(partNo(it.id))+(it.title?'. '+it.title:''));continue;}
+  const s=aiData.sums[it.id];const line='Глава '+chNum(it.id)+(it.title?' «'+it.title+'»':'')+(it.id===cur?' (ТЕКУЩАЯ)':'')+(it.status?' ['+ST_CH[it.status].toLowerCase()+']':'')+(it.note?'. Заметка автора: '+it.note:'')+(s&&s.s?'. Содержание: '+s.s:'');
+  plan.push(line);
+ }
+ if(plan.length)parts.push('ПЛАН КНИГИ:\n'+plan.join('\n').slice(0,9000));
+ if(cur&&opt.chapter!==false){
+  const full=plainOf(prose.innerHTML);let txt=full;const LIM=14000;
+  if(full.length>LIM){const at=Math.max(0,Math.min(full.length,opt.caretAt||full.length));const a=Math.max(0,at-LIM*0.7);txt=(a>0?'…':'')+full.slice(a,a+LIM)+(a+LIM<full.length?'…':'');}
+  parts.push('ТЕКСТ ТЕКУЩЕЙ ГЛАВЫ '+chNum(cur)+(item(cur).title?' «'+item(cur).title+'»':'')+':\n'+txt);
+ }
+ return parts.join('\n\n');
+}
+
+/* ---------- request (streaming, with fallback) ---------- */
+let aiAbort=null;
+async function aiCall(messages,onDelta,opts={}){
+ const c=aiCfg();
+ if(!c.key&&c.prov!=='custom')throw{code:'nokey'};
+ if(!c.base||!c.model)throw{code:'nocfg'};
+ if(!navigator.onLine)throw{code:'offline'};
+ aiAbort=new AbortController();
+ const headers={'Content-Type':'application/json'};if(c.key)headers.Authorization='Bearer '+c.key;
+ if(c.prov==='openrouter'){headers['HTTP-Referer']=location.origin+location.pathname;headers['X-Title']='Kniga writer';}
+ const body={model:c.model,messages,temperature:opts.temperature??0.7,stream:!!onDelta};
+ let res;
+ try{res=await fetch(c.base+'/chat/completions',{method:'POST',headers,body:JSON.stringify(body),signal:aiAbort.signal});}
+ catch(e){if(e&&e.name==='AbortError')throw{code:'abort'};throw{code:'net',msg:String(e&&e.message||e)};}
+ if(!res.ok){let t='';try{t=await res.text();}catch(_){}let m=t;try{const j=JSON.parse(t);m=(j.error&&(j.error.message||j.error))||j.message||t;}catch(_){}throw{code:'http',status:res.status,msg:String(m).slice(0,300)};}
+ if(!onDelta||!res.body||!res.body.getReader){const j=await res.json();const t=((j.choices||[])[0]||{}).message;return(t&&t.content)||'';}
+ const rd=res.body.getReader();const dec=new TextDecoder();let buf='',out='';
+ try{
+  while(true){const {done,value}=await rd.read();if(done)break;buf+=dec.decode(value,{stream:true});
+   let i;while((i=buf.indexOf('\n'))>=0){const line=buf.slice(0,i).trim();buf=buf.slice(i+1);
+    if(!line.startsWith('data:'))continue;const data=line.slice(5).trim();if(data==='[DONE]')continue;
+    try{const j=JSON.parse(data);if(j.error)throw{code:'http',status:0,msg:j.error.message||'ошибка сервиса'};const d=((j.choices||[])[0]||{}).delta||{};if(d.content){out+=d.content;onDelta(out);}}catch(err){if(err&&err.code)throw err;}}}
+ }catch(e){if(e&&e.name==='AbortError')throw{code:'abort',partial:out};throw e;}
+ return out;
+}
+function aiErrText(e){
+ if(!e)return'Неизвестная ошибка.';
+ switch(e.code){
+  case'nokey':return'Сначала добавьте ключ доступа в настройках помощника (шестерёнка вверху).';
+  case'nocfg':return'В настройках помощника не указан адрес сервиса или модель.';
+  case'offline':return'Нет интернета. Помощнику нужен интернет, остальное приложение работает и без него.';
+  case'abort':return'Остановлено.';
+  case'net':return'Не удалось связаться с сервисом. Проверьте интернет. Если интернет есть, возможно, этот сервис недоступен из вашей сети или не принимает запросы из приложения: попробуйте другой сервис в настройках.';
+  case'http':
+   if(e.status===401||e.status===403)return'Сервис не принял ключ доступа ('+e.status+'). Проверьте ключ в настройках.';
+   if(e.status===402)return'На счёте сервиса закончились деньги или бесплатный лимит (402). Пополните баланс или выберите бесплатный OpenRouter.';
+   if(e.status===429)return'Слишком много запросов (429). Бесплатный лимит на сегодня, похоже, исчерпан: подождите или переключитесь на другой сервис.';
+   if(e.status===404)return'Сервис не нашёл модель (404). Проверьте название модели в настройках.';
+   return'Сервис ответил ошибкой '+(e.status||'')+': '+(e.msg||'без описания');
+ }
+ return String(e.msg||e);
+}
+
+/* ---------- memory lines from answers ---------- */
+function aiTakeMemory(text){
+ const facts=[];const clean=text.split('\n').filter(l=>{const m=l.match(/^\s*[«"]?ЗАПОМНИТЬ\s*:\s*(.+?)[»"]?\s*$/i);if(m){facts.push(m[1].trim());return false;}return true;}).join('\n').trim();
+ if(facts.length){const have=aiData.mem.split('\n').map(s=>s.replace(/^•\s*/,'').trim().toLowerCase());
+  const add=facts.filter(f=>!have.includes(f.toLowerCase()));
+  if(add.length){aiData.mem=(aiData.mem.trim()?aiData.mem.trim()+'\n':'')+add.map(f=>'• '+f).join('\n');aiStore();}
+  return{text:clean,saved:add};}
+ return{text:clean,saved:[]};
+}
+
+/* ---------- markdown-ish rendering ---------- */
+function mdInline(s){return esc(s).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/(^|[^*])\*(?!\s)(.+?)\*(?!\*)/g,'$1<i>$2</i>').replace(/_(.+?)_/g,'<i>$1</i>');}
+function mdToHtml(t){
+ const lines=t.replace(/\r/g,'').split('\n');let out='',list=null;
+ const close=()=>{if(list){out+='</'+list+'>';list=null;}};
+ for(const raw of lines){const l=raw.trimEnd();
+  let m;
+  if(!l.trim()){close();continue;}
+  if((m=l.match(/^\s*[-*•]\s+(.*)$/))){if(list!=='ul'){close();out+='<ul>';list='ul';}out+='<li>'+mdInline(m[1])+'</li>';continue;}
+  if((m=l.match(/^\s*\d+[.)]\s+(.*)$/))){if(list!=='ol'){close();out+='<ol>';list='ol';}out+='<li>'+mdInline(m[1])+'</li>';continue;}
+  close();
+  if((m=l.match(/^#{1,6}\s+(.*)$/))){out+='<p><b>'+mdInline(m[1])+'</b></p>';continue;}
+  out+='<p>'+mdInline(l)+'</p>';
+ }
+ close();return out;
+}
+function answerParas(t){
+ // text meant for the book: strip markdown wrappers, keep bold/italic
+ return t.replace(/\r/g,'').split(/\n\s*\n|\n/).map(s=>s.trim()).filter(Boolean).filter(s=>!/^#{1,6}\s/.test(s)||true)
+  .map(s=>s.replace(/^#{1,6}\s+/,'').replace(/^[«"](.*)[»"]$/s,(m,x)=>/[«"]/.test(x)?m:x));
+}
+function parasHtml(ps){return ps.map(p=>/^\*\s*\*\s*\*$|^⁂$/.test(p)?'<div class="scene" contenteditable="false">* * *</div>':'<p>'+mdInline(p).replace(/<i>(.*?)<\/i>/g,'<i>$1</i>')+'</p>').join('');}
+
+/* ---------- selection captured when the panel opens ---------- */
+let aiSel=null;
+function aiCapture(){
+ aiSel=null;
+ const sel=getSelection();let r=null;
+ if(sel.rangeCount&&prose.contains(sel.anchorNode))r=sel.getRangeAt(0).cloneRange();
+ else if(savedRange&&prose.contains(savedRange.startContainer))r=savedRange.cloneRange();
+ if(!r)return;
+ const text=r.toString();
+ let caretAt=null;try{const x=document.createRange();x.selectNodeContents(prose);x.setEnd(r.endContainer,r.endOffset);caretAt=x.toString().length;}catch(e){}
+ aiSel={range:r,text:text.trim()?text:'',caretAt,chapter:cur};
+}
+function aiParagraphAtCaret(){
+ if(!aiSel)return'';const blk=blockOf(aiSel.range.startContainer);return blk?blk.textContent.trim():'';
+}
+
+/* ---------- actions ---------- */
+const AI_ACTIONS=[
+ {id:'fix',label:'Исправить ошибки',need:'text',mode:'replace',temp:.2,p:t=>'Исправь орфографию, пунктуацию и опечатки в тексте ниже. Стиль и слова не меняй. Верни только исправленный текст.\n\n'+t},
+ {id:'style',label:'Улучшить стиль',need:'text',mode:'replace',temp:.6,p:t=>'Отредактируй текст ниже: сделай его живее и точнее, убери повторы, канцелярит и лишние слова. Сохрани смысл, голос автора и длину примерно такой же. Верни только новый текст.\n\n'+t},
+ {id:'shorter',label:'Сократить',need:'text',mode:'replace',temp:.4,p:t=>'Сократи текст ниже примерно на треть без потери смысла и важных деталей. Верни только новый текст.\n\n'+t},
+ {id:'cont',label:'Продолжить',need:'none',mode:'insert',temp:.85,p:(t,ctx)=>'Продолжи текст главы с места, где стоит курсор, 2–3 абзаца в стиле автора. Учитывай героев и события. Верни только продолжение.\n\nТекст перед курсором (последний фрагмент):\n'+ctx.before},
+ {id:'ideas',label:'Идеи, что дальше',need:'none',mode:'chat',temp:.9,p:()=>'Предложи 5 разных вариантов, как может развиваться сюжет дальше после текущей главы. Каждый вариант — 1–2 предложения, с учётом героев и уже случившихся событий.'},
+ {id:'review',label:'Разбор главы',need:'none',mode:'chat',temp:.5,p:()=>'Сделай редакторский разбор текущей главы: сильные стороны, слабые места (темп, логика, мотивация героев, диалоги, повторы), противоречия с карточками героев и событиями. Дай 5–7 конкретных советов.'},
+ {id:'describe',label:'Описание',need:'text',mode:'chat',temp:.85,p:t=>'Предложи три варианта яркого, но лаконичного описания для фрагмента ниже (место, внешность, атмосфера — по смыслу). Каждый вариант 2–4 предложения, в стиле автора.\n\n'+t},
+ {id:'names',label:'Подобрать имя',need:'none',mode:'chat',temp:.9,p:()=>'Предложи 10 имён (с фамилиями, если уместно) для нового персонажа этой книги, подходящих по эпохе, месту и тону. Коротко поясни каждое.'}
+];
+function aiCtxBefore(){
+ const full=plainOf(prose.innerHTML);const at=aiSel&&aiSel.caretAt!=null?aiSel.caretAt:full.length;return full.slice(Math.max(0,at-3500),at);
+}
+async function aiRunAction(a){
+ let text='';
+ if(a.need==='text'){text=(aiSel&&aiSel.text)||aiParagraphAtCaret();if(!text){aiNote('Выделите фрагмент текста или поставьте курсор в нужный абзац, затем откройте помощника.');return;}}
+ const prompt=a.p(text,{before:aiCtxBefore()});
+ const shown=a.label+(text?': «'+(text.length>140?text.slice(0,140)+'…':text)+'»':'');
+ await aiSend(prompt,{shown,mode:a.mode,temp:a.temp,targetWhole:a.need==='text'&&!(aiSel&&aiSel.text)});
+}
+
+/* ---------- conversation ---------- */
+let aiBusy=false;
+async function aiSend(prompt,o={}){
+ if(aiBusy)return;
+ if(!aiCfg().key&&aiCfg().prov!=='custom'){aiSettings(true);return;}
+ aiBusy=true;aiUpdBusy();
+ const userMsg={r:'user',t:o.shown||prompt,full:prompt,ts:Date.now()};
+ aiData.chat.push(userMsg);
+ const bot={r:'bot',t:'',mode:o.mode||'chat',targetWhole:!!o.targetWhole,ts:Date.now(),pending:true};aiData.chat.push(bot);
+ aiRender();aiScroll();
+ const hist=aiData.chat.slice(0,-2).filter(m=>!m.err).slice(-10).map(m=>({role:m.r==='user'?'user':'assistant',content:(m.full||m.t).slice(0,4000)}));
+ const msgs=[{role:'system',content:aiSystem()+'\n\n'+aiContext({caretAt:aiSel&&aiSel.caretAt})},...hist,{role:'user',content:prompt+(aiSel&&aiSel.text&&!prompt.includes(aiSel.text)&&!o.shown?'\n\nВыделенный фрагмент:\n'+aiSel.text:'')}];
+ try{
+  let last=0;
+  const txt=await aiCall(msgs,t=>{bot.t=t;const now=Date.now();if(now-last>80){last=now;aiPatchLast();}},{temperature:o.temp});
+  const r=aiTakeMemory(txt||'');bot.t=r.text||'(пустой ответ)';bot.saved=r.saved;
+ }catch(e){bot.err=true;bot.t=(e&&e.partial?e.partial+'\n\n':'')+aiErrText(e);if(e&&e.code==='abort'&&e.partial){bot.err=false;bot.t=e.partial;}}
+ bot.pending=false;aiBusy=false;aiStore();aiRender();aiUpdBusy();aiScroll();
+}
+function aiNote(t){aiData.chat.push({r:'bot',t,err:true,ts:Date.now(),local:true});aiRender();aiScroll();}
+function aiUpdBusy(){const s=$('#aiSend');if(!s)return;s.innerHTML=aiBusy?'<svg class="ico" viewBox="0 0 24 24"><rect x="7" y="7" width="10" height="10" rx="1.5"/></svg>':'<svg class="ico" viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6"/></svg>';s.setAttribute('aria-label',aiBusy?'Остановить':'Отправить');
+ document.querySelectorAll('.ai-chips button').forEach(b=>b.disabled=aiBusy);}
+
+/* ---------- applying answers to the text ---------- */
+function aiRestoreRange(){
+ if(!aiSel||aiSel.chapter!==cur)return false;
+ try{prose.focus({preventScroll:true});const s=getSelection();s.removeAllRanges();s.addRange(aiSel.range);return true;}catch(e){return false;}
+}
+function aiApply(msg,how){
+ if(!cur){toast('Сначала откройте главу');return;}
+ const ps=answerParas(msg.t);if(!ps.length)return;
+ if(aiSel&&aiSel.chapter!==cur){toast('Вы перешли в другую главу. Поставьте курсор и откройте помощника снова.');return;}
+ histRecord();
+ if(how==='replace'){
+  if(!aiRestoreRange()){toast('Не нашёл фрагмент, который нужно заменить');return;}
+  if(msg.targetWhole||!aiSel.text){const blk=blockOf(aiSel.range.startContainer);if(blk){const r=document.createRange();r.selectNodeContents(blk);const s=getSelection();s.removeAllRanges();s.addRange(r);}}
+  if(ps.length===1)document.execCommand('insertText',false,ps[0].replace(/\*\*|__/g,''));
+  else document.execCommand('insertHTML',false,parasHtml(ps));
+ }else{
+  // insert as new paragraphs after the block with the caret (or at the end)
+  const blk=aiSel&&aiSel.chapter===cur?blockOf(aiSel.range.endContainer):null;
+  const tmp=el('div',{html:parasHtml(ps)});const nodes=[...tmp.childNodes];
+  if(blk)blk.after(...nodes);else prose.append(...nodes);
+  const lastN=nodes[nodes.length-1];
+  if(blk&&!blk.textContent.trim()&&blk.tagName==='P')blk.remove();
+  try{const r=document.createRange();r.selectNodeContents(lastN);r.collapse(false);const s=getSelection();s.removeAllRanges();s.addRange(r);}catch(e){}
+ }
+ onProse();histRecord();
+ closeAI();setTimeout(revealCaret,60);
+ toast(how==='replace'?'Текст заменён. Отменить можно кнопкой ↶':'Текст добавлен. Отменить можно кнопкой ↶',3000);
+}
+async function aiCopy(t){try{await navigator.clipboard.writeText(t);toast('Скопировано');}catch(e){toast('Не получилось скопировать');}}
+
+/* ---------- panel ---------- */
+function openAI(){
+ aiCapture();flushAll();
+ const p=$('#ai');p.hidden=false;document.body.classList.add('ai-open');
+ if(aiData.bookId!==bookId)aiLoad(bookId);
+ aiRender();aiFit();setTimeout(aiScroll,30);
+ if(!aiCfg().key&&aiCfg().prov!=='custom')setTimeout(()=>aiSettings(true),250);
+}
+function closeAI(){$('#ai').hidden=true;document.body.classList.remove('ai-open');if(aiBusy&&aiAbort){}}
+function aiFit(){const p=$('#ai');if(p.hidden)return;const vv=window.visualViewport;if(vv){p.style.top=vv.offsetTop+'px';p.style.height=vv.height+'px';}else{p.style.top='0';p.style.height='100%';}}
+if(window.visualViewport){visualViewport.addEventListener('resize',aiFit);visualViewport.addEventListener('scroll',aiFit);}
+function aiScroll(){const l=$('#aiLog');if(l)l.scrollTop=l.scrollHeight;}
+function aiTarget(){
+ if(aiSel&&aiSel.text)return'Выделено: «'+(aiSel.text.length>90?aiSel.text.slice(0,90)+'…':aiSel.text)+'»';
+ const p=aiParagraphAtCaret();if(p)return'Абзац с курсором: «'+(p.length>90?p.slice(0,90)+'…':p)+'»';
+ return cur?'Глава '+chNum(cur)+(item(cur)&&item(cur).title?' «'+item(cur).title+'»':''):'';
+}
+function aiRender(){
+ const log=$('#aiLog');if(!log)return;log.textContent='';
+ $('#aiTarget').textContent=aiTarget();
+ const memN=aiData.mem.split('\n').filter(s=>s.trim()).length;
+ $('#aiMemBtn').textContent='Память'+(memN?' · '+memN:'');
+ if(!aiData.chat.length){
+  log.append(el('div',{class:'ai-empty'},
+   el('b',{text:'Помощник знает вашу книгу'}),
+   el('p',{text:'Он видит текст текущей главы, карточки героев и событий, план глав и память книги. Поэтому писать длинные объяснения не нужно: «перепиши диалог живее», «как лучше назвать эту главу?», «запомни: повествование от первого лица».'}),
+   el('p',{text:'Выделите фрагмент в тексте перед открытием помощника, чтобы работать с ним. Ответ можно вставить в книгу одной кнопкой.'})));
+ }
+ aiData.chat.forEach((m,i)=>log.append(aiMsgEl(m,i)));
+}
+function aiMsgEl(m,i){
+ if(m.r==='user')return el('div',{class:'ai-msg me'},el('div',{class:'ai-b',text:m.t}));
+ const b=el('div',{class:'ai-b'+(m.err?' err':'')});
+ if(m.pending&&!m.t)b.append(el('span',{class:'ai-dots'},el('i'),el('i'),el('i')));else b.innerHTML=mdToHtml(m.t);
+ const wrap=el('div',{class:'ai-msg bot','data-i':String(i)},b);
+ if(m.saved&&m.saved.length)wrap.append(el('div',{class:'ai-saved',text:'Запомнил: '+m.saved.join('; ')}));
+ const lastBot=aiData.chat.map(x=>x.r==='bot'&&!x.sys&&!x.err).lastIndexOf(true);
+ if(!m.pending&&!m.err&&!m.sys&&i!==lastBot)wrap.append(el('button',{class:'ai-more',type:'button',text:'Действия',onclick:()=>{const a=aiActs(m);wrap.querySelector('.ai-more').replaceWith(a);}}));
+ if(!m.pending&&!m.err&&!m.sys&&i===lastBot){
+  wrap.append(aiActs(m));
+ }
+ return wrap;
+}
+function aiActs(m){
+  const acts=el('div',{class:'ai-acts'});
+  const canReplace=cur&&aiSel&&aiSel.chapter===cur&&(aiSel.text||m.targetWhole);
+  if(canReplace&&(m.mode==='replace'||(m.mode==='chat'&&aiSel.text)))acts.append(el('button',{class:m.mode==='replace'?'btn':'btn ghost',type:'button',text:aiSel.text?'Заменить выделенное':'Заменить абзац',onclick:()=>aiApply(m,'replace')}));
+  if(cur)acts.append(el('button',{class:m.mode==='insert'?'btn':'btn ghost',type:'button',text:'Вставить в текст',onclick:()=>aiApply(m,'insert')}));
+  acts.append(el('button',{class:'btn ghost',type:'button',text:'Копировать',onclick:()=>aiCopy(m.t)}));
+  acts.append(el('button',{class:'btn ghost',type:'button',text:'В память',onclick:()=>aiRemember(m.t)}));
+  return acts;
+}
+function aiPatchLast(){const log=$('#aiLog');const i=aiData.chat.length-1;const node=log&&log.querySelector('.ai-msg.bot[data-i="'+i+'"] .ai-b');if(node){node.innerHTML=mdToHtml(aiData.chat[i].t);aiScroll();}}
+function aiRemember(t){
+ const ta=el('textarea',{id:'aiRemTxt'});ta.value=t.length>400?t.slice(0,400):t;
+ openModal('Добавить в память книги',[el('div',{class:'fine',text:'Сократите до сути: помощник будет учитывать это в каждом ответе по этой книге.'}),el('label',{class:'fld'},el('span',{text:'Что запомнить'}),ta)],
+  [{label:'Отмена',ghost:true,fn:closeModal},{label:'Запомнить',primary:true,fn:()=>{const v=ta.value.trim();if(!v){closeModal();return;}aiData.mem=(aiData.mem.trim()?aiData.mem.trim()+'\n':'')+'• '+v.replace(/\n+/g,' ');aiStore();closeModal();aiRender();toast('Добавлено в память книги');}}]);
+ setTimeout(()=>ta.focus(),80);
+}
+function aiMemory(){
+ const ta=el('textarea',{id:'aiMemTxt',rows:'10',placeholder:'Например:\n• Жанр: мистический детектив, северный посёлок, 1990-е.\n• Повествование от третьего лица, прошедшее время.\n• Вера никогда не плачет при людях.\n• Избегать слова «внезапно».'});ta.value=aiData.mem;
+ const sumsN=Object.keys(aiData.sums).filter(id=>item(id)).length;
+ openModal('Память помощника',[
+  el('div',{class:'fine',text:'Всё, что здесь записано, помощник учитывает в каждом ответе по этой книге. Он сам дописывает сюда факты, когда вы говорите «запомни…». Карточки героев, события и заметки к главам он видит и без этого.'}),
+  el('label',{class:'fld'},el('span',{text:'Память книги «'+(book.title||'Без названия')+'»'}),ta),
+  el('div',{class:'fld'},el('span',{text:'Краткое содержание глав'}),
+   el('div',{class:'fine',text:'Чтобы помощник помнил всю книгу, а не только открытую главу, он может кратко пересказать каждую главу. Сейчас пересказано глав: '+sumsN+' из '+chapters().length+'. Обновляются только изменённые главы.'}),
+   el('button',{class:'btn ghost',type:'button',style:'align-self:flex-start',text:'Обновить краткое содержание',onclick:()=>{closeModal();aiSummaries();}}))
+ ],[
+  {label:'Очистить переписку',danger:true,fn:async()=>{if(!await confirmBox('Очистить переписку с помощником?','Память книги и краткое содержание глав останутся.','Очистить'))return;aiData.chat=[];aiStore();aiRender();}},
+  {label:'Сохранить',primary:true,fn:()=>{aiData.mem=ta.value;aiStore();closeModal();aiRender();toast('Память сохранена');}}]);
+}
+async function aiSummaries(){
+ if(aiBusy)return;if(!aiCfg().key&&aiCfg().prov!=='custom'){aiSettings(true);return;}
+ flushAll();const list=chapters().filter(c=>{const h=c.id===cur?prose.innerHTML:html[c.id];const t=plainOf(h);if(t.length<200)return false;const s=aiData.sums[c.id];return!s||s.h!==hashStr(t);});
+ if(!list.length){aiNote('Краткое содержание всех глав уже актуально.');return;}
+ aiBusy=true;aiUpdBusy();const note={r:'bot',t:'Пересказываю главы: 0 из '+list.length+'…',ts:Date.now(),pending:true,sys:true};aiData.chat.push(note);aiRender();aiScroll();
+ let n=0,fail=null;
+ for(const c of list){
+  const t=plainOf(c.id===cur?prose.innerHTML:html[c.id]);
+  try{const s=await aiCall([{role:'system',content:'Ты помогаешь писателю вести конспект книги. Пиши по-русски.'},{role:'user',content:'Перескажи главу в 3–5 предложениях: ключевые события, кто участвует, что изменилось, чем закончилась. Без оценок.\n\nГлава '+chNum(c.id)+(c.title?' «'+c.title+'»':'')+':\n'+t.slice(0,24000)}],null,{temperature:.2});
+   aiData.sums[c.id]={h:hashStr(t),s:s.trim().replace(/\s+/g,' ').slice(0,900),at:new Date().toISOString()};n++;note.t='Пересказываю главы: '+n+' из '+list.length+'…';aiPatchLast();aiStore();}
+  catch(e){fail=e;break;}
+ }
+ note.pending=false;note.t=fail?'Пересказано глав: '+n+' из '+list.length+'. '+aiErrText(fail):'Готово: пересказано глав — '+n+'. Теперь помощник помнит содержание всей книги.';note.err=!!fail;
+ aiBusy=false;aiUpdBusy();aiStore();aiRender();aiScroll();
+}
+function aiSettings(firstTime){
+ const c=aiCfg();let prov=c.prov;
+ const seg=el('div',{class:'cf-seg'});const hint=el('div',{class:'fine'});const link=el('a',{class:'link',target:'_blank',rel:'noopener'});
+ const key=el('input',{id:'aiKey',type:'password',autocomplete:'off',placeholder:'Вставьте ключ доступа',spellcheck:'false'});
+ const base=el('input',{id:'aiBase',type:'url',autocomplete:'off',placeholder:'https://…/v1',spellcheck:'false'});
+ const model=el('input',{id:'aiModel',type:'text',autocomplete:'off',spellcheck:'false'});
+ const baseFld=el('label',{class:'fld'},el('span',{text:'Адрес сервиса'}),base);
+ const keys=Object.assign({},c.keys);if(c.key)keys[c.prov]=keys[c.prov]||c.key;
+ const draw=()=>{const p=AI_PROV[prov];seg.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.p===prov)));
+  hint.textContent=p.hint;link.hidden=!p.keyUrl;if(p.keyUrl){link.href=p.keyUrl;link.textContent='Открыть страницу ключей ›';}
+  key.value=keys[prov]||'';base.value=prov===c.prov&&c.base?c.base:p.base;model.value=prov===c.prov&&c.model?c.model:p.model;baseFld.hidden=prov!=='custom';};
+ for(const k in AI_PROV)seg.append(el('button',{type:'button','data-p':k,text:k==='openrouter'?'OpenRouter':k==='deepseek'?'DeepSeek':'Другой',onclick:()=>{keys[prov]=key.value.trim();prov=k;draw();}}));
+ draw();
+ const result=el('div',{class:'fine'});
+ const save=()=>{keys[prov]=key.value.trim();const p=AI_PROV[prov];aiSaveCfg({prov,key:keys[prov],keys,base:base.value.trim()||p.base,model:model.value.trim()||p.model});};
+ openModal('Настройки помощника',[
+  firstTime?el('div',{class:'note',style:'margin:0',text:'Чтобы помощник заработал, нужен бесплатный ключ доступа к нейросети. Это делается один раз, около двух минут.'}):null,
+  el('div',{class:'fld'},el('span',{text:'Сервис'}),seg,hint,link),
+  el('label',{class:'fld'},el('span',{text:'Ключ доступа'}),key),
+  baseFld,
+  el('label',{class:'fld'},el('span',{text:'Модель'}),model),
+  el('div',{class:'fine',text:'Ключ хранится только на этом телефоне и не попадает в резервные копии книги. Текст главы и карточки отправляются выбранному сервису только когда вы что-то спрашиваете у помощника.'}),
+  result
+ ],[
+  {label:'Проверить',ghost:true,fn:async()=>{save();result.textContent='Проверяю…';try{const t=await aiCall([{role:'user',content:'Ответь одним словом: работает?'}],null,{temperature:0});result.textContent='Работает. Ответ сервиса: «'+t.trim().slice(0,60)+'»';}catch(e){result.textContent=aiErrText(e);}}},
+  {label:'Сохранить',primary:true,fn:()=>{save();closeModal();toast('Настройки помощника сохранены');}}]);
+ setTimeout(()=>{if(!key.value)key.focus();},120);
+}
+function aiSubmit(){
+ if(aiBusy){if(aiAbort)aiAbort.abort();return;}
+ const ta=$('#aiIn');const v=ta.value.trim();if(!v)return;ta.value='';aiGrow();
+ aiSend(v,{mode:'chat',temp:.7});
+}
+function aiGrow(){const ta=$('#aiIn');ta.style.height='auto';ta.style.height=Math.min(140,ta.scrollHeight)+'px';}
+
 /* ---------- help ---------- */
 const HELP=[
  ['Главы и части','<p>Нажмите <b>☰</b> слева вверху: откроется оглавление.</p><ul><li><b>+ Глава</b> и <b>+ Часть</b> добавляют главу или часть после текущей.</li><li><b>Порядок</b> показывает стрелки, чтобы переставлять главы, а также кнопки переименования и удаления.</li><li>Название главы можно править прямо на листе, крупный заголовок над текстом.</li><li>Цветная точка у главы показывает её статус, серая строка под названием это заметка к главе.</li></ul>'],
  ['Как писать и оформлять','<p>Нижняя панель:</p><ul><li><kbd>↶</kbd> <kbd>↷</kbd> отменить и повторить.</li><li><kbd>¶</kbd> обычный абзац, <kbd>Заг</kbd> подзаголовок, <kbd>⁂</kbd> разрыв сцены.</li><li><kbd>Ж</kbd> жирный, <kbd>К</kbd> курсив. Кнопка горит, когда оформление включено.</li><li>Облачко ставит <b>заметку на полях</b>: выделите фразу и нажмите его. Заметка подсветится жёлтым, нажатие на неё открывает текст. В PDF, Word и EPUB заметки не попадают.</li><li>Картинка вставляет фото из галереи, подпись пишется под ним.</li><li><kbd>✓</kbd> прячет клавиатуру.</li></ul><p>Пока открыта клавиатура, панель стоит вверху экрана. Если вы ушли листанием далеко от курсора, любая кнопка панели вернёт к нему.</p><p>При наборе приложение само ставит <b>тире</b> («- » в начале абзаца и « - » между словами), <b>«ёлочки»</b> вместо прямых кавычек и <b>«…»</b> вместо трёх точек.</p>'],
- ['Верхняя панель и поиск','<p>Верхняя панель прячется, когда вы листаете текст вниз или пишете, и появляется, если чуть потянуть текст вверх.</p><ul><li><b>Название вверху</b> открывает список всех книг.</li><li><b>Лупа</b> ищет пару слов по всей книге, «е» и «ё» считаются одинаковыми. Нажмите на результат, и откроется нужное место.</li><li><b>Заменить…</b> под строкой поиска меняет слово во всей книге, например имя героя. Перед заменой сохраняется версия каждой главы.</li><li><b>Рамка</b> включает режим без отвлечений, выход значком в правом верхнем углу.</li><li><b>Книжка</b> показывает вёрстку и сохраняет PDF.</li><li><b>⋯</b> открывает название, обложки, экспорт, копии и настройки.</li></ul>'],
+ ['Верхняя панель и поиск','<p>Верхняя панель прячется, когда вы листаете текст вниз или пишете, и появляется, если чуть потянуть текст вверх.</p><ul><li><b>Название вверху</b> открывает список всех книг.</li><li><b>Лупа</b> ищет пару слов по всей книге, «е» и «ё» считаются одинаковыми. Нажмите на результат, и откроется нужное место.</li><li><b>Заменить…</b> под строкой поиска меняет слово во всей книге, например имя героя. Перед заменой сохраняется версия каждой главы.</li><li><b>✦</b> открывает помощника-нейросеть. Режим без отвлечений включается в меню ⋯, выход значком в правом верхнем углу.</li><li><b>Книжка</b> показывает вёрстку и сохраняет PDF.</li><li><b>⋯</b> открывает название, обложки, экспорт, копии и настройки.</li></ul>'],
  ['Под текстом главы','<p>Пролистайте главу до конца:</p><ul><li>сколько слов в главе и сколько написано сегодня, <b>цель на день</b>;</li><li><b>статус</b>: черновик, правка или готово;</li><li><b>заметка к главе</b>: о чём она и что доделать, в книгу не попадает;</li><li><b>Версии</b>: состояние главы по дням, любую версию можно посмотреть и вернуть;</li><li><b>Разделить главу</b> в месте курсора и <b>Объединить со следующей</b>.</li></ul>'],
  ['Герои и события','<p>В оглавлении есть вкладки <b>Герои</b> и <b>События</b>.</p><ul><li>Герой: фото, имя, возраст, внешность и характер.</li><li>Событие: название, описание, глава и участники. События идут в порядке глав.</li></ul>'],
  ['Несколько книг и корзина','<ul><li>Нажмите название вверху или название книги в оглавлении: откроется <b>Все книги</b>. Там переключение между книгами и кнопка <b>Новая книга</b>.</li><li>Удалённые главы и книги 30 дней лежат в <b>корзине</b>: корзина глав внизу оглавления, корзина книг внизу списка «Все книги».</li></ul>'],
  ['Где хранится текст и копии','<ul><li>Всё хранится <b>только на этом телефоне</b>, на сервер ничего не уходит. Работает и без интернета.</li><li>Приложение с иконки и сайт в Safari хранят книги <b>отдельно</b>. Пишите в одном месте.</li><li>Вверху рядом с номером главы видно <b>«сохранено»</b>.</li><li>Раз в неделю делайте <b>копию</b>: ⋯ → Сохранить копию, файл ляжет в «Файлы». Если копии давно не было, приложение напомнит.</li><li><b>Загрузить копию</b> добавляет книгу из файла в список, ничего не заменяя. Так книгу можно перенести на другой телефон.</li></ul>'],
  ['PDF, Word и EPUB','<ul><li><b>Книжка</b> вверху показывает книгу по страницам 125 × 200 мм с обложками, содержанием и номерами страниц. Кнопка PDF сохраняет файл.</li><li>⋯ → <b>Word</b> для редактора или издательства, <b>EPUB</b> для электронных читалок.</li><li>Обложки и аннотация задаются в ⋯.</li></ul>'],
- ['Внешний вид','<ul><li>⋯ → <b>Размер текста</b> в редакторе.</li><li>Тема: <b>светлая, ночная</b> или <b>как в телефоне</b>.</li><li><b>Режим без отвлечений</b> прячет всё, кроме текста.</li></ul>']
+ ['Помощник (нейросеть)','<p>Кнопка <b>✦</b> вверху открывает помощника. Он видит текст открытой главы, карточки героев и событий, план глав с заметками и <b>память книги</b>, поэтому подробно объяснять ничего не нужно.</p><ul><li><b>Один раз</b> откройте шестерёнку и вставьте ключ доступа. Бесплатный вариант: OpenRouter, ключ создаётся на openrouter.ai → Keys без карты. DeepSeek платный, но очень дешёвый.</li><li>Перед открытием помощника <b>выделите фрагмент</b> или поставьте курсор в абзац. Кнопки «Исправить ошибки», «Улучшить стиль», «Сократить» работают с ним, «Продолжить» пишет дальше от курсора.</li><li>Под ответом: <b>Заменить выделенное</b>, <b>Вставить в текст</b>, <b>Копировать</b>, <b>В память</b>. Любую вставку можно отменить кнопкой ↶.</li><li><b>Память</b>: напишите «запомни: …», и помощник сохранит факт для этой книги. Список можно править вручную. Там же кнопка <b>«Обновить краткое содержание»</b>, чтобы помощник помнил все главы.</li><li>Помощнику нужен интернет. Ключ хранится только на телефоне и не попадает в копии книги.</li></ul>'],
+ ['Внешний вид','<ul><li>⋯ → <b>Размер текста</b> в редакторе.</li><li>Тема: <b>светлая, ночная</b> или <b>как в телефоне</b>.</li><li><b>Режим без отвлечений</b> (⋯) прячет всё, кроме текста.</li></ul>']
 ];
 function openHelp(){
  const box=el('div',{class:'help'});
@@ -1592,7 +1990,15 @@ function openHelp(){
 }
 $('#helpBtn').onclick=openHelp;
 
-$('#focusBtn').onclick=()=>toggleFocus(true);
+$('#aiBtn').onclick=openAI;
+$('#aiClose').onclick=closeAI;
+$('#aiSet').onclick=()=>aiSettings(false);
+$('#aiMemBtn').onclick=aiMemory;
+$('#aiSend').onclick=aiSubmit;
+$('#aiIn').addEventListener('input',aiGrow);
+$('#aiIn').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();aiSubmit();}});
+AI_ACTIONS.forEach(a=>$('#aiChips').append(el('button',{type:'button',text:a.label,onclick:()=>aiRunAction(a)})));
+aiUpdBusy();
 $('#focusExit').onclick=()=>toggleFocus(false);
 $('#replToggle').onclick=()=>{const b=$('#replBox');b.hidden=!b.hidden;if(!b.hidden)setTimeout(()=>$('#rq').focus(),50);};
 $('#replGo').onclick=replaceAll;
@@ -1607,7 +2013,7 @@ load().then(async()=>{await purgeOldTrash();renderAll();renderFoot();setTimeout(
 if('serviceWorker' in navigator&&location.protocol.startsWith('http')){
   navigator.serviceWorker.register('sw.js').catch(()=>{});
   navigator.serviceWorker.ready.then(async()=>{
-    try{const c=await caches.open('kniga-v9');if(!(await c.match('index.html')))return;
+    try{const c=await caches.open('kniga-v10');if(!(await c.match('index.html')))return;
       if(localStorage.getItem('kp:offline')==='2')return;localStorage.setItem('kp:offline','2');}catch(e){return;}
     const d=document.createElement('div');d.className='toast';d.setAttribute('role','status');
     d.textContent='Готово: теперь приложение открывается и без интернета';document.body.append(d);setTimeout(()=>d.remove(),4500);
